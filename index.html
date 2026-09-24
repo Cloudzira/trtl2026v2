@@ -9,7 +9,14 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@700&display=swap" rel="stylesheet">
-    
+    <!-- Google Gen AI SDK Import Map -->
+<script type="importmap">
+  {
+    "imports": {
+      "@google/genai": "https://esm.run/@google/genai"
+    }
+  }
+</script>
     <!-- ==========================================
          1. INISIALISASI FIREBASE & AUTENTIKASI
          ========================================== -->
@@ -563,6 +570,17 @@
         </div>
     </div>
 
+<div class="tartili-ai-widget" style="max-width: 400px; margin: 20px auto; padding: 15px; border: 1px solid #ccc; border-radius: 8px; background: #fff;">
+    <h3>Tanya Tartili AI</h3>
+    <div id="chat-container" style="height: 250px; overflow-y: scroll; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; background: #f9f9f9; border-radius: 4px;">
+        <div class="chat-msg chat-ai"><b>Ustadz Tartili AI:</b> Assalamu'alaikum! Silakan tanyakan seputar materi Tartili...</div>
+    </div>
+    <div class="chat-input-group" style="display: flex; gap: 5px;">
+        <input type="text" id="user-query" placeholder="Ketik pertanyaan..." style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" onkeydown="if(event.key === 'Enter') askTartili()">
+        <button onclick="askTartili()" style="padding: 8px 15px; background: #004080; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Kirim</button>
+    </div>
+</div>
+    
     <!-- Halaman Daftar Bookmark (Tersimpan) -->
     <div id="bookmarks-screen" class="screen">
         <div class="bookmarks-content-wrapper">
@@ -1333,5 +1351,65 @@ async function askTartili() {
             openJilid(jilid, page);
         }
     </script>
+    <script type="module">
+    import { GoogleGenAI } from "@google/genai";
+
+    // Masukkan API Key kamu di sini
+    const apiKey = "AQ.Ab8RN6LN5P8du5kL0sYKXUmS9IVI1MhPou2KP-bpNBBLE8o_Hg";
+    const ai = new GoogleGenAI({ apiKey: apiKey });
+
+    window.askTartili = async function() {
+        const inputField = document.getElementById('user-query');
+        const chatContainer = document.getElementById('chat-container');
+        const question = inputField.value.trim();
+
+        if (!question) return;
+
+        chatContainer.innerHTML += `<div class="chat-msg chat-user" style="text-align: right; margin: 8px 0;"><b>Kamu:</b> ${question}</div>`;
+        inputField.value = '';
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        const loadingId = "loading-" + Date.now();
+        chatContainer.innerHTML += `<div id="${loadingId}" class="chat-msg chat-ai" style="text-align: left; margin: 8px 0;"><b>Ustadz Tartili AI:</b> <i>Sedang mengetik...</i></div>`;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        try {
+            const systemInstruction = `
+[PERAN & IDENTITAS]
+Kamu adalah "Ustadz Tartili AI - Asisten Ahli Metode Tartili", pengajar Al-Qur'an yang sabar, ramah, dan menjelaskan materi seperti kepada anak SD.
+
+[PETA MATERI & HALAMAN TARTILI JILID 1]
+- Halaman 1-4: Cover, pengantar, dan Daftar Isi.
+- Halaman 8: Hadits tentang belajar Al-Qur'an ("Khoirukum man ta'allamal qur'ana wa 'allamahu").
+- Halaman 9: Latihan dasar pengenalan huruf Alif (أ) dan Ba (ب) berharakat fathah.
+- Halaman 10: Latihan pengenalan huruf Ta (ت) berharakat fathah.
+- Halaman 12: Latihan pengenalan huruf Tsa (ث) berharakat fathah.
+- Halaman 14: Latihan pengenalan huruf Jim (ج) berharakat fathah.
+
+[ATURAN UTAMA]
+1. Jawab pertanyaan seputar materi Tartili Jilid 1 menggunakan peta di atas.
+2. Gunakan bahasa Indonesia yang santun, islami (mulai dengan salam), dan mudah dipahami.
+            `;
+
+            const response = await ai.models.generateContent({
+                model: 'gemini-3.6-flash',
+                contents: [
+                    { role: 'user', parts: [{ text: systemInstruction + "\n\nPertanyaan Pengguna: " + question }] }
+                ],
+            });
+
+            document.getElementById(loadingId).remove();
+            const reply = response.text || "Maaf, AI tidak memberikan respons.";
+
+            chatContainer.innerHTML += `<div class="chat-msg chat-ai" style="text-align: left; margin: 8px 0; color: #004080;"><b>Ustadz Tartili AI:</b> ${reply}</div>`;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        } catch (error) {
+            document.getElementById(loadingId)?.remove();
+            chatContainer.innerHTML += `<div class="chat-msg" style="color: red; margin: 8px 0;"><b>Sistem:</b> Gagal terhubung ke AI (${error.message})</div>`;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+    }
+</script>
 </body>
 </html>
