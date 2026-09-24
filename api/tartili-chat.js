@@ -11,16 +11,20 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Sesuaikan dengan nama model yang aktif di AI Studio kamu
         const modelName = "gemini-3.8-flash"; 
         
+        // Kita berikan instruksi sistem/konteks dasar buku Tartili Jilid 1 di sini
+        const systemPrompt = `Anda adalah Tartili AI, asisten pengajar Al-Quran yang ahli dalam metode cepat membaca Al-Quran buku "Tartili Jilid 1". 
+        Jawablah pertanyaan pengguna berdasarkan isi materi Tartili Jilid 1 (yang membahas pengenalan huruf hijaiyah berbaris fathah, sambung, dan latihan membaca halaman per halaman secara runut).
+        Pertanyaan pengguna: ${message}`;
+
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 contents: [{
                     parts: [
-                        { text: `Berdasarkan dokumen PDF Buku Tartili Jilid 1 yang telah diunggah, jawablah pertanyaan berikut dengan akurat dan informatif: ${message}` }
+                        { text: systemPrompt }
                     ]
                 }]
             })
@@ -29,7 +33,7 @@ export default async function handler(req, res) {
         const data = await response.json();
         
         if (!data.candidates || data.candidates.length === 0) {
-            return res.status(200).json({ reply: "Maaf, AI tidak dapat membaca isi dokumen saat ini." });
+            return res.status(200).json({ reply: "Maaf, AI sedang sibuk. Silakan coba tanyakan kembali." });
         }
 
         const reply = data.candidates[0].content.parts[0].text;
