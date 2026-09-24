@@ -11,9 +11,9 @@ export default async function handler(req, res) {
     }
 
     try {
-        const modelName = "gemini-3.8-flash"; 
+        // Menggunakan model yang lebih stabil untuk menghindari lonjakan trafik
+        const modelName = "gemini-2.5-flash"; 
         
-        // Mengarahkan model secara spesifik sebagai tutor metode Tartili Jilid 1
         const promptText = `Anda adalah Tartili AI, asisten pengajar Al-Quran profesional untuk metode cepat membaca Al-Quran "Tartili Jilid 1". 
         Jawablah pertanyaan berikut secara edukatif, akurat, dan sesuai dengan materi halaman buku Tartili Jilid 1: ${message}`;
 
