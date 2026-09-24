@@ -1230,6 +1230,35 @@
             document.getElementById('btnStop').disabled = true;
         }
 
+async function askTartili() {
+    const inputField = document.getElementById('user-query');
+    const chatContainer = document.getElementById('chat-container');
+    const question = inputField.value.trim();
+
+    if (!question) return;
+
+    chatContainer.innerHTML += `<div style="margin: 6px 0; text-align: right;"><b>Kamu:</b> ${question}</div>`;
+    inputField.value = '';
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    try {
+        const response = await fetch('/api/tartili-chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: question })
+        });
+
+        const data = await response.json();
+        
+        chatContainer.innerHTML += `<div style="margin: 6px 0; text-align: left; color: #004080;"><b>Tartili AI:</b> ${data.reply}</div>`;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+    } catch (error) {
+        chatContainer.innerHTML += `<div style="margin: 6px 0; color: red;">Gagal terhubung ke AI.</div>`;
+    }
+}
+
+        
         async function uploadRecordingToDrive() {
             if (!recordedAudioBlob) return;
             document.getElementById('btnOk').disabled = true;
