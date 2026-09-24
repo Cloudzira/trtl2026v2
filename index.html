@@ -9,14 +9,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Amiri:wght@700&display=swap" rel="stylesheet">
-    <!-- Google Gen AI SDK Import Map -->
-<script type="importmap">
-  {
-    "imports": {
-      "@google/genai": "https://esm.run/@google/genai"
-    }
-  }
-</script>
+    
+    <!-- Google Gen AI SDK Import Map (TAMBAHAN AI) -->
+    <script type="importmap">
+      {
+        "imports": {
+          "@google/genai": "https://esm.run/@google/genai"
+        }
+      }
+    </script>
+
     <!-- ==========================================
          1. INISIALISASI FIREBASE & AUTENTIKASI
          ========================================== -->
@@ -225,144 +227,6 @@
             border: 1px solid var(--border-color);
         }
 
-        /* --- MEDIA QUERIES & RESPONSIVE LAYOUT --- */
-        @media (orientation: portrait) {
-            .menu-content-wrapper { max-width: 340px; }
-            .grid-jilid { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(3, auto); }
-            .btn-cover { aspect-ratio: 3/4; }
-            
-            #menu-screen h2 { order: 1 !important; }
-            .grid-jilid { order: 2 !important; }
-            .shortcut-panel { order: 3 !important; width: 100% !important; }
-            .logout-wrapper { order: 4 !important; width: 100% !important; display: flex !important; justify-content: center !important; align-items: center !important; gap: 10px !important; margin-top: 4px !important; }
-
-            .image-scroll-area { flex: 1 !important; display: flex !important; align-items: center !important; justify-content: center !important; padding: 4px !important; overflow: hidden !important; }
-            .image-container { height: 100% !important; width: auto !important; aspect-ratio: 1 / 1.414 !important; max-width: 100% !important; max-height: 100% !important; margin-bottom: 0 !important; }
-            .image-container img { width: 100% !important; height: 100% !important; object-fit: fill !important; }
-
-            .controls-wrapper { display: flex; flex-direction: column; width: 94% !important; max-width: 420px !important; gap: 4px !important; padding: 8px !important; }
-            .page-nav-panel { order: 1 !important; padding: 4px 10px !important; }
-            .shortcut-panel { order: 2 !important; }
-            .record-panel { order: 3 !important; }
-            
-            #read-screen .page-nav-panel .section-title,
-            #read-screen .shortcut-panel .section-title,
-            #bookmarks-screen .shortcut-panel .section-title { display: none !important; }
-
-            .page-nav-buttons { gap: 8px !important; }
-            .btn-page-nav-custom { height: 32px !important; }
-            .btn-prev-custom .nav-icon, .btn-next-custom .nav-icon { width: 26px !important; height: 26px !important; }
-            .nav-icon svg { width: 14px !important; height: 14px !important; }
-            .btn-prev-custom { padding-left: 32px !important; }
-            .btn-next-custom { padding-right: 32px !important; }
-
-            #menu-screen .shortcut-panel, #bookmarks-screen .shortcut-panel { padding: 8px 12px !important; }
-            #menu-screen .shortcut-container, #bookmarks-screen .shortcut-container { display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: space-between !important; gap: 8px !important; width: 100% !important; }
-            #menu-screen .shortcut-left, #bookmarks-screen .shortcut-left { display: flex !important; flex-direction: row !important; gap: 8px !important; flex: 1 !important; align-items: center !important; }
-            #menu-screen .shortcut-row, #bookmarks-screen .shortcut-row { display: flex !important; align-items: center !important; gap: 6px !important; flex: 1 !important; margin: 0 !important; flex-direction: row !important; }
-            #menu-screen .shortcut-row span, #bookmarks-screen .shortcut-row span { font-size: 11px !important; width: auto !important; color: var(--text-muted); }
-            #menu-screen .shortcut-panel select, #bookmarks-screen .shortcut-panel select { width: 100% !important; height: 30px !important; font-size: 12px !important; padding: 2px 6px !important; flex: 1 !important; background: var(--input-bg); color: var(--text-main); border-color: var(--border-color); border-radius: 8px; }
-            
-            #menu-screen .shortcut-panel .btn-open-menu, #bookmarks-screen .shortcut-panel .btn-open-target, #bookmarks-screen .shortcut-panel .btn-menu-back { width: 55px !important; flex: 0 0 55px !important; height: 30px !important; font-size: 11px !important; margin-top: 0 !important; border-radius: 8px !important; }
-        }
-        
-        @media (orientation: landscape) {
-            #menu-screen { 
-                flex-direction: column !important; justify-content: center !important; 
-                align-items: center !important; gap: 12px !important; padding: 12px !important; 
-                height: 100dvh !important; overflow: hidden !important;
-            }
-            .menu-content-wrapper { max-width: 880px !important; gap: 12px !important; }
-
-            #menu-screen h2 { font-size: 19px; text-align: center; width: 100%; order: 1 !important; }
-            .grid-jilid { grid-template-columns: repeat(6, 1fr); grid-template-rows: 1fr; gap: 12px; order: 2 !important; }
-            .btn-cover { aspect-ratio: 3/4; max-height: 160px !important; }
-            
-            #menu-screen .shortcut-panel { 
-                width: 100% !important; max-width: 480px !important; height: auto !important; 
-                min-height: unset !important; max-height: none !important; flex-grow: 0 !important;
-                flex-shrink: 0 !important; padding: 8px 12px !important; order: 3 !important;
-            }
-            #menu-screen .shortcut-container { display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: center !important; gap: 10px !important; width: 100% !important; height: auto !important; }
-            #menu-screen .shortcut-left { display: flex !important; flex-direction: row !important; gap: 10px !important; flex: 1 !important; align-items: center !important; }
-            #menu-screen .shortcut-row { display: flex !important; align-items: center !important; gap: 6px !important; flex: 1 !important; margin: 0 !important; flex-direction: row !important; }
-            #menu-screen .shortcut-row span { width: auto !important; font-size: 11px !important; color: var(--text-muted); }
-            #menu-screen .shortcut-panel select { padding: 2px 8px !important; font-size: 12px !important; height: 30px !important; width: 100% !important; flex: 1 !important; background: var(--input-bg); color: var(--text-main); border-color: var(--border-color); border-radius: 8px; }
-            
-            #menu-screen .shortcut-panel .btn-open-menu { width: 85px !important; flex: 0 0 85px !important; height: 30px !important; font-size: 11px !important; align-self: center !important; margin-top: 0 !important; border-radius: 8px !important; }
-
-            .logout-wrapper { order: 4 !important; width: 100% !important; display: flex !important; justify-content: center !important; align-items: center !important; gap: 8px !important; }
-
-            .image-scroll-area {
-                display: flex !important; flex-direction: column !important; align-items: center !important;
-                justify-content: flex-start !important; overflow-y: auto !important; overflow-x: hidden !important;
-                padding-top: 4px !important; padding-bottom: 4px !important;
-            }
-            
-            .image-container { 
-                max-width: 550px !important; height: auto !important; aspect-ratio: 1 / 1.414 !important; 
-                margin: 0 auto !important; transform-origin: top center !important;
-            }
-            .image-container img { width: 100% !important; height: 100% !important; object-fit: fill !important; }
-
-            .controls-wrapper {
-                position: relative !important; bottom: auto !important; left: auto !important;
-                transform: none !important; width: calc(550px * 1.8) !important; max-width: 98% !important;
-                margin: 4px auto; display: flex !important; flex-direction: row !important;
-                flex-wrap: nowrap !important; justify-content: center !important; align-items: stretch !important;
-                gap: 8px !important; background: var(--bg-panel); backdrop-filter: blur(20px);
-                padding: 8px 12px; border-radius: 18px; box-shadow: var(--shadow); z-index: 100; border: 1px solid var(--border-color);
-            }
-            
-            .shortcut-panel { width: auto !important; flex: 1.8 !important; height: auto !important; display: flex; flex-direction: column; justify-content: center; }
-            .record-panel { width: auto !important; flex: 1.4 !important; height: auto !important; order: 2 !important; display: flex; flex-direction: column; justify-content: center; }
-            .page-nav-panel { 
-                width: auto !important; flex: 0.85 !important; height: auto !important; order: 3 !important;
-                background: var(--bg-card) !important; border: 1px solid var(--border-color) !important; border-radius: 12px !important; 
-                padding: 6px 8px !important; display: flex !important; flex-direction: column !important; 
-                justify-content: center !important; align-items: stretch !important; gap: 4px !important; 
-                box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important; 
-            }
-            
-            #read-screen .page-nav-panel .section-title,
-            #read-screen .shortcut-panel .section-title { display: block !important; }
-
-            #bookmarks-screen .bookmarks-content-wrapper { max-width: 550px !important; justify-content: flex-start !important; gap: 10px !important; }
-            #bookmarks-screen .bookmarks-list { max-height: calc(100vh - 120px) !important; }
-            #bookmarks-screen .shortcut-panel { 
-                width: 100% !important; max-width: 100% !important; 
-                padding: 8px 12px !important; height: auto !important; 
-                justify-content: center !important; flex: 0 0 auto !important;
-            }
-            #bookmarks-screen .shortcut-panel .section-title { display: none !important; }
-
-            .page-nav-buttons { gap: 6px !important; }
-            .btn-page-nav-custom {
-                height: 28px !important; flex: 1 !important; width: 100% !important; border-radius: 14px !important;
-            }
-            .btn-prev-custom .nav-icon, .btn-next-custom .nav-icon { width: 20px !important; height: 20px !important; }
-            .nav-icon svg { width: 11px !important; height: 11px !important; }
-            .btn-prev-custom { padding-left: 20px !important; }
-            .btn-next-custom { padding-right: 20px !important; }
-            
-            .universal-btn { height: 28px !important; font-size: 11px !important; border-radius: 8px !important; }
-            
-            #read-screen .shortcut-container, #bookmarks-screen .shortcut-container { display: flex !important; flex-direction: row !important; align-items: center !important; justify-content: center !important; gap: 8px !important; width: 100% !important; }
-            #read-screen .shortcut-left, #bookmarks-screen .shortcut-left { display: flex !important; flex-direction: row !important; gap: 8px !important; flex: 2.2 !important; align-items: center !important; min-width: 0 !important; }
-            #read-screen .shortcut-row, #bookmarks-screen .shortcut-row { display: flex !important; align-items: center !important; gap: 4px !important; margin: 0 !important; flex-direction: row !important; min-width: 0 !important; }
-            #read-screen .shortcut-row span, #bookmarks-screen .shortcut-row span { width: auto !important; font-size: 11px !important; color: var(--text-muted); flex-shrink: 0; }
-            
-            #bookmarks-screen .shortcut-row.row-tartili { flex: 0 0 75px !important; width: 75px !important; }
-            #bookmarks-screen .shortcut-row.row-halaman { flex: 1 1 auto !important; min-width: 0 !important; width: auto !important; }
-            
-            #read-screen .shortcut-row.row-tartili { flex: 0 0 75px !important; width: 75px !important; }
-            #read-screen .shortcut-row.row-halaman { flex: 1 1 auto !important; min-width: 0 !important; width: auto !important; }
-            
-            #read-screen .shortcut-panel select, #bookmarks-screen .shortcut-panel select { padding: 2px 4px !important; font-size: 11px !important; height: 28px !important; width: 100% !important; min-width: 0 !important; background: var(--input-bg); color: var(--text-main); border-color: var(--border-color); border-radius: 8px; }
-            #read-screen .btn-open-target, #bookmarks-screen .btn-open-target { width: 55px !important; flex: 0 0 55px !important; height: 28px !important; font-size: 11px !important; align-self: center !important; margin-top: 0 !important; border-radius: 8px !important; }
-            #read-screen .btn-menu-back, #bookmarks-screen .btn-menu-back { width: 55px !important; flex: 0 0 55px !important; height: 28px !important; font-size: 11px !important; align-self: center !important; margin-top: 0 !important; border-radius: 8px !important; }
-        }
-
         /* --- COVER BUTTONS --- */
         .btn-cover { 
             width: 100%; border: none; padding: 0; cursor: pointer; border-radius: 20px; 
@@ -500,6 +364,29 @@
         
         .shortcut-container { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
         .shortcut-left { flex: 2; display: flex; flex-direction: column; gap: 4px; }
+
+        /* --- TARTILI AI WIDGET STYLING (TAMBAHAN AI) --- */
+        .tartili-ai-widget {
+            max-width: 400px; width: 100%; margin: 10px auto; padding: 15px; border: 1px solid var(--border-color); 
+            border-radius: 16px; background: var(--bg-panel); backdrop-filter: blur(20px); box-shadow: var(--shadow);
+        }
+        .tartili-ai-widget h3 { font-size: 14px; color: var(--text-main); margin-bottom: 8px; font-weight: 700; }
+        .chat-container {
+            height: 180px; overflow-y: scroll; border: 1px solid var(--border-color); padding: 10px; 
+            margin-bottom: 8px; background: var(--input-bg); border-radius: 8px; font-size: 12px;
+        }
+        .chat-msg { margin: 6px 0; line-height: 1.4; }
+        .chat-user { text-align: right; color: var(--text-main); font-weight: 600; }
+        .chat-ai { text-align: left; color: #0284c7; }
+        .chat-input-group { display: flex; gap: 5px; }
+        .chat-input-group input {
+            flex: 1; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; 
+            font-size: 12px; background: var(--input-bg); color: var(--text-main); outline: none;
+        }
+        .chat-input-group button {
+            padding: 8px 14px; background: var(--accent-gradient); color: #fff; border: none; 
+            border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 12px;
+        }
     </style>
 </head>
 <body class="light-theme">
@@ -555,6 +442,18 @@
                 </div>
             </div>
 
+            <!-- Widget Tanya Tartili AI (TAMBAHAN AI) -->
+            <div class="tartili-ai-widget">
+                <h3>Tanya Tartili AI</h3>
+                <div id="chat-container-menu" class="chat-container">
+                    <div class="chat-msg chat-ai"><b>Ustadz Tartili AI:</b> Assalamu'alaikum! Silakan tanyakan seputar materi Tartili...</div>
+                </div>
+                <div class="chat-input-group">
+                    <input type="text" id="user-query-menu" placeholder="Ketik pertanyaan..." onkeydown="if(event.key === 'Enter') askTartili('menu')">
+                    <button onclick="askTartili('menu')">Kirim</button>
+                </div>
+            </div>
+
             <div class="logout-wrapper">
                 <button class="btn-bookmark saved" onclick="openBookmarksScreen()" title="Halaman Tersimpan">
                     <svg viewBox="0 0 24 24"><path d="M6 2C4.89543 2 4 2.89543 4 4V22L12 17L20 22V4C20 2.89543 19.1046 2 18 2H6ZM9 5H15C15.5523 5 16 5.44772 16 6C16 6.55228 15.5523 7 15 7H9C8.44772 7 8 6.55228 8 6C8 5.44772 8.44772 5 9 5Z"/></svg>
@@ -569,17 +468,6 @@
             </div>
         </div>
     </div>
-
-<div class="tartili-ai-widget" style="max-width: 400px; margin: 20px auto; padding: 15px; border: 1px solid #ccc; border-radius: 8px; background: #fff;">
-    <h3>Tanya Tartili AI</h3>
-    <div id="chat-container" style="height: 250px; overflow-y: scroll; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; background: #f9f9f9; border-radius: 4px;">
-        <div class="chat-msg chat-ai"><b>Ustadz Tartili AI:</b> Assalamu'alaikum! Silakan tanyakan seputar materi Tartili...</div>
-    </div>
-    <div class="chat-input-group" style="display: flex; gap: 5px;">
-        <input type="text" id="user-query" placeholder="Ketik pertanyaan..." style="flex: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px;" onkeydown="if(event.key === 'Enter') askTartili()">
-        <button onclick="askTartili()" style="padding: 8px 15px; background: #004080; color: #fff; border: none; border-radius: 4px; cursor: pointer;">Kirim</button>
-    </div>
-</div>
     
     <!-- Halaman Daftar Bookmark (Tersimpan) -->
     <div id="bookmarks-screen" class="screen">
@@ -588,9 +476,7 @@
                 <h2>Halaman Tersimpan</h2>
             </div>
             
-            <div class="bookmarks-list" id="bookmarksListContainer">
-                <!-- Daftar item bookmark dimuat dinamis -->
-            </div>
+            <div class="bookmarks-list" id="bookmarksListContainer"></div>
             
             <div class="shortcut-panel">
                 <div class="section-title">Pintasan</div>
@@ -663,17 +549,6 @@
                     </div>
                     <button class="universal-btn btn-open-target" onclick="directOpen('Read')">Buka</button>
                 </div>
-            </div>
-
-            <div class="tartili-ai-widget" style="margin-top: 20px; padding: 15px; border: 1px solid #ccc; border-radius: 8px; background: #fff;">
-                <h3>Tanya Tartili AI</h3>
-                    <div id="chat-container" style="height: 250px; overflow-y: scroll; border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; background: #f9f9f9;">
-                <div style="color: #666; font-size: 13px;">Silakan tanyakan seputar materi Tartili...</div>
-            </div>
-                <div style="display: flex; gap: 5px;">
-                    <input type="text" id="user-query" placeholder="Ketik pertanyaan..." style="flex: 1; padding: 8px;">
-                <button onclick="askTartili()" style="padding: 8px 15px;">Kirim</button>
-            </div>
             </div>
             
             <div class="record-panel">
@@ -1248,35 +1123,6 @@
             document.getElementById('btnStop').disabled = true;
         }
 
-async function askTartili() {
-    const inputField = document.getElementById('user-query');
-    const chatContainer = document.getElementById('chat-container');
-    const question = inputField.value.trim();
-
-    if (!question) return;
-
-    chatContainer.innerHTML += `<div style="margin: 6px 0; text-align: right;"><b>Kamu:</b> ${question}</div>`;
-    inputField.value = '';
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-
-    try {
-        const response = await fetch('/api/tartili-chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: question })
-        });
-
-        const data = await response.json();
-        
-        chatContainer.innerHTML += `<div style="margin: 6px 0; text-align: left; color: #004080;"><b>Tartili AI:</b> ${data.reply}</div>`;
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-
-    } catch (error) {
-        chatContainer.innerHTML += `<div style="margin: 6px 0; color: red;">Gagal terhubung ke AI.</div>`;
-    }
-}
-
-        
         async function uploadRecordingToDrive() {
             if (!recordedAudioBlob) return;
             document.getElementById('btnOk').disabled = true;
@@ -1351,30 +1197,34 @@ async function askTartili() {
             openJilid(jilid, page);
         }
     </script>
+
+    <!-- ==========================================
+         5. MODUL GOOGLE GEN AI SDK (TARTILI AI)
+         ========================================== -->
     <script type="module">
-    import { GoogleGenAI } from "@google/genai";
+        import { GoogleGenAI } from "@google/genai";
 
-    // Masukkan API Key kamu di sini
-    const apiKey = "AQ.Ab8RN6LN5P8du5kL0sYKXUmS9IVI1MhPou2KP-bpNBBLE8o_Hg";
-    const ai = new GoogleGenAI({ apiKey: apiKey });
+        // Ganti dengan API Key valid milikmu
+        const apiKey = "AIzaSyDCkiYKe-lKkbb0czz9y9ZBGN9SgOhbjmw"; 
+        const ai = new GoogleGenAI({ apiKey: apiKey });
 
-    window.askTartili = async function() {
-        const inputField = document.getElementById('user-query');
-        const chatContainer = document.getElementById('chat-container');
-        const question = inputField.value.trim();
+        window.askTartili = async function(mode = 'menu') {
+            const inputField = document.getElementById('user-query-menu');
+            const chatContainer = document.getElementById('chat-container-menu');
+            const question = inputField.value.trim();
 
-        if (!question) return;
+            if (!question) return;
 
-        chatContainer.innerHTML += `<div class="chat-msg chat-user" style="text-align: right; margin: 8px 0;"><b>Kamu:</b> ${question}</div>`;
-        inputField.value = '';
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+            chatContainer.innerHTML += `<div class="chat-msg chat-user"><b>Kamu:</b> ${question}</div>`;
+            inputField.value = '';
+            chatContainer.scrollTop = chatContainer.scrollHeight;
 
-        const loadingId = "loading-" + Date.now();
-        chatContainer.innerHTML += `<div id="${loadingId}" class="chat-msg chat-ai" style="text-align: left; margin: 8px 0;"><b>Ustadz Tartili AI:</b> <i>Sedang mengetik...</i></div>`;
-        chatContainer.scrollTop = chatContainer.scrollHeight;
+            const loadingId = "loading-" + Date.now();
+            chatContainer.innerHTML += `<div id="${loadingId}" class="chat-msg chat-ai"><b>Ustadz Tartili AI:</b> <i>Sedang mengetik...</i></div>`;
+            chatContainer.scrollTop = chatContainer.scrollHeight;
 
-        try {
-            const systemInstruction = `
+            try {
+                const systemInstruction = `
 [PERAN & IDENTITAS]
 Kamu adalah "Ustadz Tartili AI - Asisten Ahli Metode Tartili", pengajar Al-Qur'an yang sabar, ramah, dan menjelaskan materi seperti kepada anak SD.
 
@@ -1389,27 +1239,27 @@ Kamu adalah "Ustadz Tartili AI - Asisten Ahli Metode Tartili", pengajar Al-Qur'a
 [ATURAN UTAMA]
 1. Jawab pertanyaan seputar materi Tartili Jilid 1 menggunakan peta di atas.
 2. Gunakan bahasa Indonesia yang santun, islami (mulai dengan salam), dan mudah dipahami.
-            `;
+                `;
 
-            const response = await ai.models.generateContent({
-                model: 'gemini-3.6-flash',
-                contents: [
-                    { role: 'user', parts: [{ text: systemInstruction + "\n\nPertanyaan Pengguna: " + question }] }
-                ],
-            });
+                const response = await ai.models.generateContent({
+                    model: 'gemini-3.6-flash',
+                    contents: [
+                        { role: 'user', parts: [{ text: systemInstruction + "\n\nPertanyaan Pengguna: " + question }] }
+                    ],
+                });
 
-            document.getElementById(loadingId).remove();
-            const reply = response.text || "Maaf, AI tidak memberikan respons.";
+                document.getElementById(loadingId).remove();
+                const reply = response.text || "Maaf, AI tidak memberikan respons.";
 
-            chatContainer.innerHTML += `<div class="chat-msg chat-ai" style="text-align: left; margin: 8px 0; color: #004080;"><b>Ustadz Tartili AI:</b> ${reply}</div>`;
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+                chatContainer.innerHTML += `<div class="chat-msg chat-ai"><b>Ustadz Tartili AI:</b> ${reply}</div>`;
+                chatContainer.scrollTop = chatContainer.scrollHeight;
 
-        } catch (error) {
-            document.getElementById(loadingId)?.remove();
-            chatContainer.innerHTML += `<div class="chat-msg" style="color: red; margin: 8px 0;"><b>Sistem:</b> Gagal terhubung ke AI (${error.message})</div>`;
-            chatContainer.scrollTop = chatContainer.scrollHeight;
+            } catch (error) {
+                document.getElementById(loadingId)?.remove();
+                chatContainer.innerHTML += `<div class="chat-msg" style="color: red;"><b>Sistem:</b> Gagal terhubung ke AI (${error.message})</div>`;
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
         }
-    }
-</script>
+    </script>
 </body>
 </html>
