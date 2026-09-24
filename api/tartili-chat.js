@@ -11,7 +11,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const modelName = "gemini-3.6-flash"; 
+        const modelName = "gemini-3.8-flash"; 
         
         // Peta referensi isi halaman asli Tartili Jilid 1 yang akurat
         const promptText = `
