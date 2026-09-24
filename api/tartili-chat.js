@@ -11,8 +11,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Menggunakan model gemini-2.5-flash yang stabil untuk menangani dokumen
-        const modelName = "gemini-2.5-flash"; 
+        // Sesuaikan dengan nama model yang aktif di AI Studio kamu
+        const modelName = "gemini-3.8-flash"; 
         
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
             method: 'POST',
@@ -20,7 +20,7 @@ export default async function handler(req, res) {
             body: JSON.stringify({
                 contents: [{
                     parts: [
-                        { text: `Berdasarkan dokumen PDF Tartili yang telah diunggah dan tersimpan, jawablah pertanyaan berikut dengan akurat dan jelas: ${message}` }
+                        { text: `Berdasarkan dokumen PDF Buku Tartili Jilid 1 yang telah diunggah, jawablah pertanyaan berikut dengan akurat dan informatif: ${message}` }
                     ]
                 }]
             })
@@ -28,9 +28,8 @@ export default async function handler(req, res) {
 
         const data = await response.json();
         
-        // Debugging cadangan jika struktur respons berbeda
         if (!data.candidates || data.candidates.length === 0) {
-            return res.status(200).json({ reply: "AI merespons, namun data konten tidak ditemukan. Coba pastikan file PDF sudah terunggah dengan benar di AI Studio." });
+            return res.status(200).json({ reply: "Maaf, AI tidak dapat membaca isi dokumen saat ini." });
         }
 
         const reply = data.candidates[0].content.parts[0].text;
