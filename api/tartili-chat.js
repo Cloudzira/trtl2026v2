@@ -11,7 +11,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        const modelName = "gemini-2.5-flash"; // Sesuaikan dengan model yang kamu gunakan
+        // Menggunakan model gemini yang andal
+        const modelName = "gemini-2.5-flash"; 
         const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -23,9 +24,11 @@ export default async function handler(req, res) {
         });
 
         const data = await response.json();
-        const reply = data.candidates[0].content.parts[0].text;
+        
+        // Ambil teks jawaban dengan aman
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Maaf, AI tidak memberikan respons.";
 
-        return res.status(200).json({ reply });
+        return res.status(200).json({ reply: reply });
     } catch (error) {
         return res.status(500).json({ error: 'Gagal terhubung ke Gemini AI.' });
     }
