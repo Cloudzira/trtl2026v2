@@ -1111,6 +1111,14 @@
             min-width: 0 !important;
         }
 
+        #bookmarks-screen .bookmarks-menu-only {
+            justify-content: center !important;
+        }
+        #bookmarks-screen .bookmarks-menu-only .btn-menu-back {
+            width: 96px !important;
+            flex: 0 0 96px !important;
+        }
+
         /* Bar penilaian guru: satu grid stabil di landscape, dua baris di portrait. */
         #read-screen .teacher-review-panel {
             width: 100%; padding: 8px 10px !important; display: flex; align-items: stretch;
@@ -1393,23 +1401,8 @@
             <div class="bookmarks-list" id="bookmarksListContainer"></div>
             
             <div class="shortcut-panel">
-                <div class="section-title">Pintasan</div>
-                <div class="shortcut-container">
+                <div class="shortcut-container bookmarks-menu-only">
                     <button class="universal-btn btn-menu-back" onclick="goToMenu()">Menu</button>
-                    <div class="shortcut-left">
-                        <div class="shortcut-row row-tartili">
-                            <span>Tartili</span>
-                            <select id="jumpJilidBookmarks" onchange="updatePageOptions('Bookmarks')">
-                                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-                                <option value="4">4</option><option value="5">5</option><option value="6">6</option>
-                            </select>
-                        </div>
-                        <div class="shortcut-row row-halaman">
-                            <span>Halaman</span>
-                            <select id="jumpPageSelectBookmarks"></select>
-                        </div>
-                    </div>
-                    <button class="universal-btn btn-open-target" onclick="directOpen('Bookmarks')">Buka</button>
                 </div>
             </div>
         </div>
