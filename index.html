@@ -870,6 +870,19 @@
             }
         }
 
+        /* Hilangkan batas 75px lama pada baris Tartili agar kedua dropdown
+           memakai track grid yang sama lebar. */
+        @media (orientation: landscape), (orientation: portrait) {
+            #read-screen .shortcut-row.row-tartili,
+            #read-screen .shortcut-row.row-halaman,
+            #bookmarks-screen .shortcut-row.row-tartili,
+            #bookmarks-screen .shortcut-row.row-halaman {
+                flex: none !important;
+                width: 100% !important;
+                min-width: 0 !important;
+            }
+        }
+
         .btn-cover { 
             width: 100%; border: 1px solid var(--border-color); padding: 0; cursor: pointer; border-radius: 20px; 
             transition: var(--transition); transform: scale(0.96); background: transparent; 
