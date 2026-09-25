@@ -805,8 +805,8 @@
             #read-screen .btn-menu-back, #bookmarks-screen .btn-menu-back { width: 55px !important; flex: 0 0 55px !important; height: 28px !important; font-size: 11px !important; align-self: center !important; margin-top: 0 !important; border-radius: 8px !important; }
         }
 
-        /* Samakan kembali dropdown pada halaman membaca dan tersimpan setelah
-           aturan responsif landscape yang lama selesai diproses. */
+          /* Samakan dropdown hanya pada landscape; portrait memakai susunan awal. */
+          @media (orientation: landscape) {
         #read-screen .shortcut-left,
         #bookmarks-screen .shortcut-left {
             display: grid !important;
@@ -833,6 +833,7 @@
         #bookmarks-screen .shortcut-row select {
             width: 100% !important;
             min-width: 0 !important;
+        }
         }
 
         .btn-cover { 
@@ -981,18 +982,14 @@
         .shortcut-left { flex: 2; display: flex; flex-direction: column; gap: 4px; }
 
         /* Dua kontrol pintasan selalu berbagi lebar yang sama di semua layar. */
-        #menu-screen .shortcut-left,
-        #read-screen .shortcut-left,
-        #bookmarks-screen .shortcut-left {
+        #menu-screen .shortcut-left {
             display: grid !important;
             grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
             gap: 8px !important;
             flex: 1 1 auto !important;
             min-width: 0 !important;
         }
-        #menu-screen .shortcut-row,
-        #read-screen .shortcut-row,
-        #bookmarks-screen .shortcut-row {
+        #menu-screen .shortcut-row {
             display: grid !important;
             grid-template-columns: 52px minmax(0, 1fr) !important;
             align-items: center !important;
@@ -1001,16 +998,12 @@
             min-width: 0 !important;
             margin: 0 !important;
         }
-        #menu-screen .shortcut-row span,
-        #read-screen .shortcut-row span,
-        #bookmarks-screen .shortcut-row span {
+        #menu-screen .shortcut-row span {
             width: 52px !important;
             white-space: nowrap;
             flex-shrink: 0;
         }
-        #menu-screen .shortcut-row select,
-        #read-screen .shortcut-row select,
-        #bookmarks-screen .shortcut-row select {
+        #menu-screen .shortcut-row select {
             width: 100% !important;
             min-width: 0 !important;
         }
