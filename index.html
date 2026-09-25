@@ -950,6 +950,41 @@
         .shortcut-container { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
         .shortcut-left { flex: 2; display: flex; flex-direction: column; gap: 4px; }
 
+        /* Dua kontrol pintasan selalu berbagi lebar yang sama di semua layar. */
+        #menu-screen .shortcut-left,
+        #read-screen .shortcut-left,
+        #bookmarks-screen .shortcut-left {
+            display: grid !important;
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 8px !important;
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+        }
+        #menu-screen .shortcut-row,
+        #read-screen .shortcut-row,
+        #bookmarks-screen .shortcut-row {
+            display: grid !important;
+            grid-template-columns: auto minmax(0, 1fr) !important;
+            align-items: center !important;
+            gap: 6px !important;
+            width: auto !important;
+            min-width: 0 !important;
+            margin: 0 !important;
+        }
+        #menu-screen .shortcut-row span,
+        #read-screen .shortcut-row span,
+        #bookmarks-screen .shortcut-row span {
+            width: auto !important;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        #menu-screen .shortcut-row select,
+        #read-screen .shortcut-row select,
+        #bookmarks-screen .shortcut-row select {
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+
         /* Bar penilaian guru: satu grid stabil di landscape, dua baris di portrait. */
         #read-screen .teacher-review-panel {
             width: 100%; padding: 8px 10px !important; display: flex; align-items: stretch;
