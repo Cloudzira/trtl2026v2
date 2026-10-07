@@ -10,11 +10,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- FontAwesome for Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Face-api.js CDN -->
-    <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.11/dist/face-api.min.js"></script>
+    <!-- TensorFlow.js and Face-api.js CDN (Stable Combined Bundle) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/3.18.0/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
         body { font-family: 'Inter', sans-serif; }
-        /* Custom styles for video overlay canvas */
         .video-container {
             position: relative;
             width: 100%;
@@ -33,10 +33,10 @@
             object-fit: cover;
         }
         video {
-            transform: scaleX(-1); /* Mirror camera */
+            transform: scaleX(-1);
         }
         canvas {
-            transform: scaleX(-1); /* Mirror overlay */
+            transform: scaleX(-1);
             z-index: 10;
         }
     </style>
@@ -74,9 +74,9 @@
                 <i class="fa-solid fa-brain text-2xl"></i>
             </div>
             <h3 class="text-xl font-bold text-slate-900 mb-2">Memuat Model AI...</h3>
-            <p id="loading-status" class="text-sm text-slate-500 mb-6">Mengunduh model face recognition dari server. Mohon tunggu sebentar.</p>
+            <p id="loading-status" class="text-sm text-slate-500 mb-6">Mengunduh model face recognition dari CDN. Mohon tunggu sebentar.</p>
             <div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                <div id="loading-bar" class="bg-indigo-600 h-full w-1/3 transition-all duration-300 animate-pulse"></div>
+                <div id="loading-bar" class="bg-indigo-600 h-full w-2/3 transition-all duration-300 animate-pulse"></div>
             </div>
         </div>
     </div>
@@ -86,7 +86,6 @@
         <!-- Tab 1: Presensi View -->
         <section id="tab-presensi" class="space-y-6">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <!-- Camera Feed Column -->
                 <div class="lg:col-span-2 space-y-4">
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
                         <div class="flex items-center justify-between mb-4">
@@ -96,7 +95,6 @@
                             <span id="system-status" class="text-xs px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 font-medium">Memulai Kamera...</span>
                         </div>
                         
-                        <!-- Video Container -->
                         <div class="video-container aspect-[4/3] shadow-inner">
                             <video id="webcam" autoplay muted playsinline></video>
                             <canvas id="overlay"></canvas>
@@ -109,7 +107,6 @@
                     </div>
                 </div>
 
-                <!-- Control & Realtime Status Column -->
                 <div class="space-y-6">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                         <h3 class="font-semibold text-slate-800 mb-4 flex items-center">
@@ -219,58 +216,54 @@
 
     </main>
 
-    <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400">
-        <p>&copy; 2026 FaceCheck AI Systems. Built with Tailwind CSS & Face-api.js.</p>
-    </footer>
-
     <script>
-        // Global variables for models, streams, and state
         let labeledFaceDescriptors = [];
         let faceMatcher = null;
         let isModelLoaded = false;
         let currentStream = null;
-        let enrollStream = null;
         let detectionInterval = null;
 
-        // LocalStorage keys
         const STORAGE_KEY_PROFILES = 'facecheck_profiles_v1';
         const STORAGE_KEY_HISTORY = 'facecheck_history_v1';
 
-        // Initialize App on load
+        // Initialize Face-api models on load
         window.addEventListener('DOMContentLoaded', async () => {
-            updateLoadingStatus('Memuat model deteksi wajah (TinyFaceDetector)...');
+            updateLoadingStatus('Memuat model deteksi wajah...');
             try {
-                // Load face-api models from CDN repository
-                const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.11/model/';
-                
+                // Ensure faceapi global is available
+                if (typeof faceapi === 'undefined') {
+                    throw new Error("Library face-api.js gagal dimuat dari CDN.");
+                }
+
+                // Using reliable weights repository from justadudewhohacks github pages / jsdelivr
+                const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
+
                 await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
                 updateLoadingStatus('Memuat model landmark wajah...');
                 await faceapi.nets.faceLandmarkTinyNet.loadFromUri(MODEL_URL);
-                updateLoadingStatus('Memuat model pengenalan wajah (FaceRecognition)...');
+                updateLoadingStatus('Memuat model pengenalan wajah...');
                 await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
 
                 isModelLoaded = true;
                 document.getElementById('loading-overlay').classList.add('hidden');
                 
-                // Load registered profiles from localStorage
                 loadProfilesFromStorage();
                 updateStats();
                 loadHistoryTable();
 
-                // Start active tab camera
                 initCamera('webcam');
             } catch (error) {
                 console.error("Gagal memuat model:", error);
                 document.getElementById('loading-status').innerHTML = 
-                    `<span class="text-red-500 font-semibold">Gagal memuat model AI. Periksa koneksi internet Anda dan muat ulang halaman.</span>`;
+                    `<span class="text-red-500 font-semibold">Gagal memuat model AI: ${error.message}. Periksa koneksi internet Anda.</span>`;
             }
         });
 
         function updateLoadingStatus(text) {
-            document.getElementById('loading-status').innerText = text;
+            const el = document.getElementById('loading-status');
+            if(el) el.innerText = text;
         }
 
-        // Tab Switching Management
         function switchTab(tabId) {
             ['presensi', 'enroll', 'history'].forEach(id => {
                 document.getElementById(`tab-${id}`).classList.add('hidden');
@@ -288,7 +281,6 @@
                 activeBtn.classList.add('bg-indigo-600', 'text-white', 'shadow-sm');
             }
 
-            // Handle camera streaming per tab
             stopAllStreams();
             if (tabId === 'presensi') {
                 initCamera('webcam');
@@ -297,10 +289,10 @@
             }
         }
 
-        // Camera Initialization
         async function initCamera(videoElementId) {
             try {
                 const videoEl = document.getElementById(videoElementId);
+                if(!videoEl) return;
                 const stream = await navigator.mediaDevices.getUserMedia({ 
                     video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: "user" } 
                 });
@@ -311,7 +303,6 @@
                     document.getElementById('system-status').innerText = 'Kamera Aktif & Siap';
                     document.getElementById('system-status').className = 'text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 font-medium';
                     
-                    // Start recognition loop once video plays
                     videoEl.onloadedmetadata = () => {
                         startFaceDetectionLoop();
                     };
@@ -320,7 +311,6 @@
                 console.error("Akses kamera ditolak:", err);
                 document.getElementById('system-status').innerText = 'Kamera Gagal Diakses';
                 document.getElementById('system-status').className = 'text-xs px-2.5 py-1 rounded-full bg-red-50 text-red-600 font-medium';
-                showNotificationBox('Gagal Akses Kamera', 'Pastikan Anda memberikan izin akses kamera pada browser.', 'error');
             }
         }
 
@@ -335,7 +325,6 @@
             }
         }
 
-        // Load profiles and build FaceMatcher
         function loadProfilesFromStorage() {
             const rawData = localStorage.getItem(STORAGE_KEY_PROFILES);
             if (!rawData) {
@@ -374,18 +363,16 @@
             document.getElementById('stat-today').innerText = `${todayCount} Orang`;
         }
 
-        // Face Recognition Detection Loop for Attendance
         function startFaceDetectionLoop() {
             const videoEl = document.getElementById('webcam');
             const canvas = document.getElementById('overlay');
             
-            if (!videoEl) return;
+            if (!videoEl || !canvas) return;
 
-            // Match canvas size to video dimensions
             const displaySize = { width: videoEl.clientWidth || 640, height: videoEl.clientHeight || 480 };
             faceapi.matchDimensions(canvas, displaySize);
 
-            let lastCheckinTime = {}; // Cooldown per user to prevent spam
+            let lastCheckinTime = {};
 
             detectionInterval = setInterval(async () => {
                 if (!isModelLoaded || videoEl.paused || videoEl.ended) return;
@@ -402,11 +389,10 @@
                 document.getElementById('detected-count').innerText = `Wajah terdeteksi: ${detections.length}`;
 
                 if (detections.length > 0 && faceMatcher) {
-                    results = resizedDetections.map(d => faceMatcher.findBestMatch(d.descriptor));
+                    const results = resizedDetections.map(d => faceMatcher.findBestMatch(d.descriptor));
 
                     results.forEach((result, i) => {
                         const box = resizedDetections[i].detection.box;
-                        const labelText = result.toString();
                         const isUnknown = result.label === 'unknown';
 
                         const drawBox = new faceapi.draw.DrawBox(box, { 
@@ -416,10 +402,7 @@
                         drawBox.draw(canvas);
 
                         if (!isUnknown) {
-                            const nameMatch = result.label.split(' - ')[1] || result.label;
                             const fullLabelRaw = result.label;
-                            
-                            // Check cooldown (30 seconds per user)
                             const now = Date.now();
                             if (!lastCheckinTime[fullLabelRaw] || (now - lastCheckinTime[fullLabelRaw] > 30000)) {
                                 lastCheckinTime[fullLabelRaw] = now;
@@ -431,7 +414,6 @@
             }, 800);
         }
 
-        // Enrollment Handling
         async function handleEnrollment(event) {
             event.preventDefault();
             const name = document.getElementById('enroll-name').value.trim();
@@ -445,7 +427,6 @@
             btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-2"></i> Memproses Wajah...`;
 
             try {
-                // Detect face descriptor from video stream
                 const detection = await faceapi.detectSingleFace(videoEl, new faceapi.TinyFaceDetectorOptions())
                     .withFaceLandmarks(true)
                     .withFaceDescriptor();
@@ -457,11 +438,9 @@
                 const labelKey = `${empId} - ${name}`;
                 const descriptorArray = Array.from(detection.descriptor);
 
-                // Get existing profiles from LocalStorage
                 let rawData = localStorage.getItem(STORAGE_KEY_PROFILES);
                 let profiles = rawData ? JSON.parse(rawData) : [];
 
-                // Check if ID already exists, append or update
                 let existingIndex = profiles.findIndex(p => p.label.startsWith(`${empId} -`));
                 if (existingIndex >= 0) {
                     profiles[existingIndex].descriptors.push(descriptorArray);
@@ -476,20 +455,19 @@
                 loadProfilesFromStorage();
                 updateStats();
 
-                showNotificationBox('Pendaftaran Berhasil!', `Wajah ${name} (${empId}) berhasil didaftarkan ke sistem.`, 'success');
+                alert(`Pendaftaran Berhasil!\nWajah ${name} (${empId}) berhasil didaftarkan ke sistem.`);
                 document.getElementById('enroll-form').reset();
                 switchTab('presensi');
 
             } catch (err) {
                 console.error("Enrollment error:", err);
-                showNotificationBox('Pendaftaran Gagal', err.message, 'error');
+                alert(`Pendaftaran Gagal: ${err.message}`);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="fa-solid fa-camera-retro mr-2"></i> Ambil Sampel & Daftarkan Wajah`;
             }
         }
 
-        // Record Attendance Logic
         function recordAttendance(fullLabel) {
             const parts = fullLabel.split(' - ');
             const id = parts[0];
@@ -499,14 +477,12 @@
             let history = getHistory();
             history.unshift({ id, name, timestamp, status: 'Hadir (Face Match)' });
             
-            // Limit history to 100 items
             if (history.length > 100) history.pop();
             localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
 
             updateStats();
             loadHistoryTable();
 
-            // Update UI response panel
             const responseBox = document.getElementById('checkin-response');
             const timeFormatted = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
             
@@ -521,16 +497,14 @@
             `;
         }
 
-        // Manual Checkin Simulation for Testing
         function triggerManualCheckin() {
             let rawData = localStorage.getItem(STORAGE_KEY_PROFILES);
             let profiles = rawData ? JSON.parse(rawData) : [];
             if (profiles.length === 0) {
-                showNotificationBox('Belum Ada Profil', 'Silakan daftarkan wajah terlebih dahulu di menu Pendaftaran Wajah.', 'error');
+                alert("Belum Ada Profil\n\nSilakan daftarkan wajah terlebih dahulu di menu Pendaftaran Wajah.");
                 switchTab('enroll');
                 return;
             }
-            // Pick the first profile for testing simulation
             recordAttendance(profiles[0].label);
         }
 
@@ -574,12 +548,6 @@
                 loadHistoryTable();
                 updateStats();
             }
-        }
-
-        function showNotificationBox(title, message, type) {
-            // Simple helper banner alert in console & UI status
-            console.log(`[${type.toUpperCase()}] ${title}: ${message}`);
-            alert(`${title}\n\n${message}`);
         }
     </script>
 </body>
