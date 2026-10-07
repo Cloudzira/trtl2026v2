@@ -107,14 +107,22 @@
                 </div>
             </div>
 
-            <!-- Tab 2: Pendaftaran Siswa -->
+            <!-- Tab 2: Pendaftaran Siswa (Dilengkapi Kamera Pratinjau) -->
             <div id="tab-enrollment" class="hidden space-y-6">
                 <div class="glass-card rounded-3xl p-6 md:p-8 shadow-2xl">
                     <h2 class="text-lg font-bold mb-2 flex items-center gap-2">
                         <i class="fa-solid fa-user-plus text-indigo-400"></i> Pendaftaran Siswa Baru (Multi-Sampel Aman)
                     </h2>
-                    <p class="text-xs text-slate-400 mb-6">Sistem merekam 3 sampel biometrik untuk memastikan akurasi di database skala besar.</p>
+                    <p class="text-xs text-slate-400 mb-6">Sistem merekam 3 sampel biometrik dari kamera untuk memastikan akurasi di database skala besar.</p>
                     
+                    <!-- Pratinjau Kamera untuk Pendaftaran -->
+                    <div class="mb-6 relative rounded-2xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center border border-slate-800 shadow-inner max-w-md mx-auto">
+                        <video id="webcam-enroll" autoplay muted playsinline class="absolute inset-0 w-full h-full object-cover transform -scale-x-100"></video>
+                        <div class="absolute inset-0 border-2 border-dashed border-indigo-500/30 rounded-2xl pointer-events-none flex items-center justify-center">
+                            <div class="text-indigo-300/40 text-[11px] font-semibold tracking-widest uppercase bg-slate-950/70 px-3 py-1.5 rounded-xl backdrop-blur-sm">Posisikan Wajah Pendaftar</div>
+                        </div>
+                    </div>
+
                     <form id="enroll-form" onsubmit="handleEnrollment(event)" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
@@ -142,7 +150,7 @@
         <!-- Kolom Kanan / Sidebar Data Kehadiran -->
         <div class="space-y-6">
             
-            <!-- 1. Blok Penanda Waktu & Hari (Diposisikan di Atas) -->
+            <!-- 1. Blok Penanda Waktu & Hari (Di Atas) -->
             <div class="glass-card rounded-3xl p-5 shadow-2xl text-center bg-gradient-to-b from-slate-900/80 to-indigo-950/40">
                 <div id="current-time" class="text-3xl font-black tracking-tight text-indigo-300 font-mono">00:00:00</div>
                 <div id="current-date" class="text-xs text-slate-400 mt-1.5 uppercase tracking-widest font-semibold">Rabu, 07 Okt 2026</div>
@@ -185,11 +193,13 @@
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
         
         let video = document.getElementById('webcam');
+        let videoEnroll = document.getElementById('webcam-enroll');
         let canvas = document.getElementById('overlay');
         let studentsCache = []; 
         let isModelLoaded = false;
         let attendanceLogs = [];
         let recordedToday = new Set(); // Menyimpan ID siswa yang sudah presensi hari ini agar tidak berulang
+        let sharedMediaStream = null;
 
         // Jam & Tanggal Realtime
         setInterval(() => {
@@ -231,13 +241,20 @@
 
         async function startCamera() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false });
-                video.srcObject = stream;
+                sharedMediaStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false });
+                
+                // Pasang stream ke elemen video presensi & pendaftaran
+                video.srcObject = sharedMediaStream;
+                videoEnroll.srcObject = sharedMediaStream;
                 
                 video.onloadedmetadata = () => {
                     video.play();
                     setupCanvasDimensions();
                     startFaceRecognitionLoop();
+                };
+
+                videoEnroll.onloadedmetadata = () => {
+                    videoEnroll.play();
                 };
 
                 document.getElementById('system-status').className = "px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-medium";
@@ -312,7 +329,7 @@
             `).join('');
         }
 
-        // Pendaftaran Multi-Sampel
+        // Pendaftaran Multi-Sampel Menggunakan Kamera Aktif
         async function handleEnrollment(e) {
             e.preventDefault();
             if (!isModelLoaded) return alert("Model AI belum siap!");
@@ -329,12 +346,12 @@
             
             for (let i = 1; i <= 3; i++) {
                 submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Mengambil Sampel Wajah ke-${i}/3...`;
-                await new Promise(resolve => setTimeout(resolve, 600));
+                await new Promise(resolve => setTimeout(resolve, 800));
 
-                const detection = await fa.detectSingleFace(video, new fa.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+                const detection = await fa.detectSingleFace(videoEnroll, new fa.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
 
                 if (!detection) {
-                    alert(`Sampel ke-${i} gagal mendeteksi wajah. Pastikan posisi menghadap lurus.`);
+                    alert(`Sampel ke-${i} gagal mendeteksi wajah. Pastikan posisi menghadap lurus ke kamera pendaftaran.`);
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = `<i class="fa-solid fa-camera-retro"></i> Mulai Pendaftaran Biometrik (3x Sampel)`;
                     return;
@@ -409,7 +426,8 @@
             const container = document.getElementById('video-container');
 
             setInterval(async () => {
-                if (!isModelLoaded || video.paused || video.ended) return;
+                // Jangan jalankan pemindaian presensi jika tab aktif bukan presensi
+                if (!isModelLoaded || video.paused || video.ended || document.getElementById('tab-attendance').classList.contains('hidden')) return;
 
                 const displaySize = { width: container.clientWidth, height: container.clientHeight };
                 
@@ -440,7 +458,6 @@
                                 activeStatusMessages.push(match.name);
 
                                 // PENCEGAHAN PRESENSI GANDA HARI INI:
-                                // Jika ID siswa ini belum pernah tercatat hari ini, catat sekali saja.
                                 const todayKey = new Date().toDateString();
                                 const attendanceCheckKey = `${match.id}_${todayKey}`;
 
