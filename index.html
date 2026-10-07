@@ -3,256 +3,222 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FaceCheck AI - Enterprise Biometric Attendance</title>
+    <title>FaceCheck AI Enterprise - Biometric Attendance System</title>
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- TensorFlow.js & Face-API.js (Vladmandic Valid Bundle) -->
+    <!-- TensorFlow.js & Face-API.js -->
     <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.11/dist/face-api.js"></script>
     <style>
-        /* Maximize Dark Glassmorphism Aesthetic */
         .glass-card {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.75) 0%, rgba(10, 15, 30, 0.85) 100%);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.8), inset 0 1px 1px 0 rgba(255, 255, 255, 0.12);
         }
         .glass-nav {
-            background: rgba(10, 15, 28, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
-        }
-        .glass-modal {
-            background: radial-gradient(circle at top, rgba(30, 41, 59, 0.9) 0%, rgba(10, 15, 28, 0.95) 100%);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
-        }
-        .glass-input {
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 23, 42, 0.85);
             backdrop-filter: blur(12px);
-            transition: all 0.3s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         }
-        .glass-input:focus {
-            background: rgba(15, 23, 42, 0.95);
-            border-color: rgba(99, 102, 241, 0.6);
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.25);
-        }
-        .log-item-card {
-            background: rgba(30, 41, 59, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            backdrop-filter: blur(12px);
-            transition: all 0.25s ease;
-        }
-        .log-item-card:hover {
-            background: rgba(30, 41, 59, 0.7);
-            border-color: rgba(99, 102, 241, 0.3);
-            transform: translateY(-1px);
-        }
-        /* Custom smooth scrollbar */
+        /* Custom scrollbar untuk log presensi */
         ::-webkit-scrollbar {
-            width: 6px;
+            width: 4px;
         }
         ::-webkit-scrollbar-track {
             background: rgba(15, 23, 42, 0.5);
         }
         ::-webkit-scrollbar-thumb {
-            background: rgba(99, 102, 241, 0.35);
-            border-radius: 9999px;
+            background: rgba(99, 102, 241, 0.3);
+            border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: rgba(99, 102, 241, 0.65);
+            background: rgba(99, 102, 241, 0.6);
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-950/40 via-slate-950 to-slate-950">
+<body class="bg-slate-950 text-slate-100 h-screen w-screen overflow-hidden flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
 
-    <!-- Header / Navbar -->
-    <header class="glass-nav sticky top-0 z-40 py-4 px-6 md:px-8 flex flex-col md:flex-row justify-between items-center gap-4">
+    <!-- Header / Navbar Utama (Compact & Professional) -->
+    <header class="glass-nav z-40 px-6 py-3 flex justify-between items-center shrink-0 shadow-2xl">
         <div class="flex items-center gap-3">
-            <div class="bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 p-3 rounded-2xl text-white shadow-xl shadow-indigo-600/30 border border-indigo-400/30">
-                <i class="fa-solid fa-fingerprint text-xl"></i>
+            <div class="bg-gradient-to-tr from-indigo-600 to-violet-500 p-2 rounded-xl text-white shadow-lg shadow-indigo-500/20">
+                <i class="fa-solid fa-fingerprint text-lg"></i>
             </div>
             <div>
-                <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-300 bg-clip-text text-transparent">FaceCheck AI Enterprise</h1>
-                <p class="text-xs text-slate-400 font-medium">Sistem Presensi Biometrik Skala Besar & Aman</p>
+                <h1 class="text-base font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-400 bg-clip-text text-transparent">FaceCheck AI Enterprise</h1>
+                <p class="text-[10px] text-slate-400 font-medium">Sistem Biometrik Wajah Skala Besar (1000+ Database)</p>
             </div>
         </div>
 
-        <!-- Tab Navigasi & Utility Buttons -->
+        <!-- Navigasi Tab & Aksi Global -->
         <div class="flex items-center gap-3">
-            <nav class="flex p-1.5 rounded-2xl bg-slate-900/90 border border-slate-800/90 shadow-inner">
-                <button onclick="switchTab('attendance')" id="btn-tab-attendance" class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/30">
-                    <i class="fa-solid fa-camera mr-2"></i> Presensi
+            <nav class="flex p-1 rounded-xl bg-slate-900/90 border border-slate-800">
+                <button onclick="switchTab('attendance')" id="btn-tab-attendance" class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-600/30">
+                    <i class="fa-solid fa-camera mr-1.5"></i> Presensi
                 </button>
-                <button onclick="requestEnrollmentAccess()" id="btn-tab-enrollment" class="px-5 py-2.5 rounded-xl text-sm font-semibold transition-all text-slate-400 hover:text-white">
-                    <i class="fa-solid fa-user-plus mr-2"></i> Pendaftaran Siswa
+                <button onclick="requestEnrollmentAccess()" id="btn-tab-enrollment" class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-user-plus mr-1.5"></i> Pendaftaran
                 </button>
             </nav>
 
-            <button onclick="toggleFullScreen()" id="fullscreen-btn" class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800/90 text-slate-300 hover:text-white hover:bg-slate-800 transition-all shadow-lg shadow-black/40 group relative" title="Mode Layar Penuh Futuristis">
-                <i class="fa-solid fa-expand text-sm group-hover:scale-110 transition-transform" id="fullscreen-icon"></i>
+            <button onclick="syncWithCloud()" class="px-3 py-1.5 rounded-xl text-xs font-medium transition-all text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 hover:bg-emerald-500/20 flex items-center gap-1.5" title="Sinkronisasi Cloud">
+                <i class="fa-solid fa-sync" id="sync-icon"></i> <span class="hidden md:inline">Sync Cloud</span>
             </button>
 
-            <button onclick="syncWithCloud()" class="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800/90 text-emerald-400 hover:bg-emerald-500/10 transition-all shadow-lg shadow-black/40 group relative" title="Sinkronisasi Data Cloud">
-                <i class="fa-solid fa-sync text-sm group-hover:rotate-180 transition-transform duration-700" id="sync-icon"></i>
+            <button onclick="toggleFullScreen()" class="px-3 py-1.5 rounded-xl text-xs font-medium transition-all text-indigo-300 bg-indigo-500/10 border border-indigo-500/20 hover:bg-indigo-500/20 flex items-center gap-1.5" title="Mode Layar Penuh">
+                <i class="fa-solid fa-expand" id="fullscreen-icon"></i> <span class="hidden md:inline">Fullscreen</span>
             </button>
         </div>
     </header>
 
-    <!-- Modal Password Pendaftaran (PIN: 100) -->
-    <div id="password-modal" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-50 flex items-center justify-center p-4 animate-fadeIn">
-        <div class="glass-modal rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl relative overflow-hidden">
-            <div class="absolute -right-12 -top-12 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
-            
-            <div class="inline-flex bg-indigo-500/10 text-indigo-400 p-4 rounded-3xl mb-4 border border-indigo-500/20 shadow-inner">
-                <i class="fa-solid fa-lock text-2xl"></i>
+    <!-- Modal PIN Keamanan Pendaftaran -->
+    <div id="pin-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="glass-card rounded-2xl p-6 max-w-xs w-full text-center shadow-2xl border border-slate-700/50">
+            <div class="inline-flex bg-indigo-500/10 text-indigo-400 p-3 rounded-2xl mb-3">
+                <i class="fa-solid fa-lock text-xl"></i>
             </div>
-            <h2 class="text-lg font-bold mb-1 text-slate-100">Autorisasi Keamanan</h2>
-            <p class="text-xs text-slate-400 mb-6">Masukkan PIN keamanan (100) untuk mengakses menu pendaftaran siswa baru.</p>
-            
-            <form onsubmit="verifyPassword(event)" class="space-y-4">
-                <input type="password" id="pin-input" autofocus required placeholder="• • •" maxlength="6" class="w-full glass-input rounded-2xl px-4 py-3.5 text-center tracking-[0.5em] font-mono text-xl text-indigo-300 focus:outline-none">
-                <div class="flex gap-3 pt-2">
-                    <button type="button" onclick="closePasswordModal()" class="w-1/2 bg-slate-800/80 hover:bg-slate-700 text-slate-300 font-semibold py-3.5 rounded-2xl transition-all text-xs uppercase tracking-wider border border-slate-700/50">Batal</button>
-                    <button type="submit" class="w-1/2 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold py-3.5 rounded-2xl transition-all shadow-lg shadow-indigo-600/30 text-xs uppercase tracking-wider border border-indigo-400/20">Masuk</button>
+            <h3 class="text-sm font-bold mb-1">Akses Pendaftaran Siswa</h3>
+            <p class="text-[11px] text-slate-400 mb-4">Masukkan PIN keamanan administrator.</p>
+            <form onsubmit="verifyPin(event)" class="space-y-3">
+                <input type="password" id="pin-input" autofocus maxlength="4" placeholder="PIN (100)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-center text-lg tracking-widest font-mono focus:outline-none focus:border-indigo-500">
+                <div class="flex gap-2">
+                    <button type="button" onclick="closePinModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-semibold text-slate-300 transition-colors">Batal</button>
+                    <button type="submit" class="flex-1 bg-indigo-600 hover:bg-indigo-500 py-2 rounded-xl text-xs font-semibold text-white transition-colors">Masuk</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Modal Loading Model AI & Sync -->
-    <div id="loading-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-50 flex items-center justify-center p-4">
-        <div class="glass-modal rounded-3xl p-8 max-w-md w-full text-center shadow-2xl relative overflow-hidden">
-            <div class="absolute -left-12 -bottom-12 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
-
-            <div class="inline-flex bg-indigo-500/10 text-indigo-400 p-4 rounded-3xl mb-4 animate-bounce border border-indigo-500/20">
+    <!-- Modal Loading Model AI & Inisialisasi -->
+    <div id="loading-modal" class="fixed inset-0 bg-slate-950/95 backdrop-blur-md z-50 flex items-center justify-center p-4">
+        <div class="glass-card rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl border border-slate-700/50">
+            <div class="inline-flex bg-indigo-500/10 text-indigo-400 p-4 rounded-3xl mb-4 animate-pulse">
                 <i class="fa-solid fa-brain text-3xl"></i>
             </div>
-            <h2 id="loading-title" class="text-xl font-bold mb-2">Memuat Mesin Neural AI...</h2>
-            <p id="loading-status" class="text-sm text-slate-400 mb-6">Menyiapkan model biometrik wajah berpresisi tinggi.</p>
-            <div class="w-full bg-slate-900/90 h-2.5 rounded-full overflow-hidden p-0.5 border border-slate-800 shadow-inner">
+            <h2 id="loading-title" class="text-lg font-bold mb-1">Memuat Mesin AI Neural...</h2>
+            <p id="loading-status" class="text-xs text-slate-400 mb-5">Menyiapkan model deteksi wajah berpresisi tinggi.</p>
+            <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden p-0.5 border border-slate-700">
                 <div id="loading-bar" class="bg-gradient-to-r from-indigo-500 to-violet-500 h-full w-full rounded-full animate-pulse"></div>
             </div>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+    <!-- Main Container (Zero-Scroll Flex Grid Layout) -->
+    <main class="flex-1 max-w-[1600px] w-full mx-auto p-4 grid grid-cols-1 lg:grid-cols-12 gap-4 overflow-hidden">
         
-        <!-- Kolom Kiri -->
-        <div class="lg:col-span-2 space-y-6">
+        <!-- Kolom Kiri / Area Konten Utama (8 Kolom) -->
+        <div class="lg:col-span-8 flex flex-col h-full overflow-hidden">
             
             <!-- Tab 1: Presensi -->
-            <div id="tab-attendance" class="space-y-6">
-                <div class="glass-card rounded-3xl p-6 shadow-2xl relative overflow-hidden">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-base font-bold flex items-center gap-2.5 text-slate-200">
-                            <i class="fa-solid fa-video text-indigo-400"></i> Kamera Pemindai Kehadiran Realtime
-                        </h2>
-                        <span id="system-status" class="px-3.5 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full text-xs font-semibold shadow-sm flex items-center gap-2">
-                            <i class="fa-solid fa-circle text-[8px] animate-ping"></i> Menyiapkan Kamera...
+            <div id="tab-attendance" class="flex flex-col h-full space-y-3">
+                <div class="glass-card rounded-2xl p-4 flex flex-col h-full shadow-2xl relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-3 shrink-0">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2 h-2 rounded-full bg-indigo-500 animate-pulse"></span>
+                            <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">Live Face Scanner</h2>
+                        </div>
+                        <span id="system-status" class="px-2.5 py-0.5 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full text-[11px] font-medium">
+                            Menyiapkan Kamera...
                         </span>
                     </div>
 
-                    <!-- Kotak Video & Canvas -->
-                    <div id="video-container" class="relative rounded-2xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center border border-slate-800/80 shadow-inner">
+                    <!-- Kotak Video Presensi (Proporsional & Mengisi Sisa Ruang) -->
+                    <div id="video-container" class="relative rounded-xl overflow-hidden bg-slate-950 flex-1 flex items-center justify-center border border-slate-800/80 shadow-inner">
                         <video id="webcam" autoplay muted playsinline class="absolute inset-0 w-full h-full object-cover transform -scale-x-100"></video>
                         <canvas id="overlay" class="absolute inset-0 w-full h-full pointer-events-none z-10"></canvas>
                         
-                        <div class="absolute inset-0 border-2 border-dashed border-indigo-500/20 rounded-2xl pointer-events-none flex items-center justify-center z-0">
-                            <div class="text-indigo-300/50 text-xs font-bold tracking-widest uppercase bg-slate-950/80 px-4 py-2 rounded-xl backdrop-blur-md border border-indigo-500/10 shadow-lg">Posisikan Wajah Di Depan Kamera</div>
+                        <div class="absolute inset-0 border-2 border-dashed border-indigo-500/15 rounded-xl pointer-events-none flex items-center justify-center z-0">
+                            <div class="text-indigo-300/30 text-[11px] font-semibold tracking-widest uppercase bg-slate-950/70 px-3 py-1 rounded-lg backdrop-blur-sm">Posisikan Wajah Di Depan Kamera</div>
                         </div>
                     </div>
 
-                    <!-- Status Hasil Verifikasi -->
-                    <div class="mt-4 p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 flex items-center justify-between shadow-inner">
-                        <div>
-                            <p class="text-[10px] uppercase tracking-wider text-slate-400 font-bold">Status Pengenalan Wajah</p>
-                            <p id="recognition-result" class="text-sm md:text-base font-bold text-slate-200 mt-0.5">Memindai wajah di depan kamera...</p>
+                    <!-- Bar Status Pengenalan Wajah -->
+                    <div class="mt-3 p-3 rounded-xl bg-slate-900/80 border border-slate-800/80 flex items-center justify-between shrink-0">
+                        <div class="min-w-0 flex-1 mr-3">
+                            <p class="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Hasil Pemindaian</p>
+                            <p id="recognition-result" class="text-xs md:text-sm font-bold text-slate-200 truncate">Memindai wajah siswa...</p>
                         </div>
-                        <div id="match-badge" class="hidden px-3.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold shadow-sm flex items-center gap-1.5">
-                            <i class="fa-solid fa-check-circle"></i> Valid Tercatat
+                        <div id="match-badge" class="hidden px-2.5 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-bold shrink-0">
+                            <i class="fa-solid fa-check-circle mr-1"></i> Tercatat
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tab 2: Pendaftaran Siswa -->
-            <div id="tab-enrollment" class="hidden space-y-6">
-                <div class="glass-card rounded-3xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
-                    <div class="flex justify-between items-center mb-3">
-                        <h2 class="text-lg font-bold flex items-center gap-2.5 text-slate-100">
-                            <i class="fa-solid fa-user-plus text-indigo-400"></i> Pendaftaran Siswa Baru (Multi-Sampel Biometrik)
-                        </h2>
-                        <button onclick="switchTab('attendance')" class="text-xs text-slate-400 hover:text-white px-3.5 py-1.5 rounded-xl bg-slate-900/90 border border-slate-800 transition-all flex items-center gap-1.5 shadow-sm">
-                            <i class="fa-solid fa-arrow-left"></i> Kembali
-                        </button>
-                    </div>
-                    <p class="text-xs text-slate-400 mb-6 leading-relaxed">Sistem akan merekam 3 sampel biometrik wajah secara berurutan untuk menjamin tingkat akurasi tinggi pada database skala besar.</p>
-                    
-                    <!-- Pratinjau Kamera untuk Pendaftaran -->
-                    <div class="mb-6 relative rounded-2xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center border border-slate-800 shadow-inner max-w-md mx-auto">
-                        <video id="webcam-enroll" autoplay muted playsinline class="absolute inset-0 w-full h-full object-cover transform -scale-x-100"></video>
-                        <div class="absolute inset-0 border-2 border-dashed border-indigo-500/30 rounded-2xl pointer-events-none flex items-center justify-center">
-                            <div class="text-indigo-300/50 text-[11px] font-bold tracking-widest uppercase bg-slate-950/80 px-3.5 py-1.5 rounded-xl backdrop-blur-md border border-indigo-500/10 shadow-lg">Posisikan Wajah Pendaftar</div>
+            <!-- Tab 2: Pendaftaran Siswa (Protected) -->
+            <div id="tab-enrollment" class="hidden flex flex-col h-full overflow-hidden">
+                <div class="glass-card rounded-2xl p-5 flex flex-col h-full shadow-2xl overflow-y-auto">
+                    <div class="flex justify-between items-center mb-3 shrink-0">
+                        <div>
+                            <h2 class="text-sm font-bold flex items-center gap-2">
+                                <i class="fa-solid fa-user-plus text-indigo-400"></i> Pendaftaran Siswa Baru (Multi-Sampel Biometrik)
+                            </h2>
+                            <p class="text-[11px] text-slate-400">Sistem merekam 3 sampel biometrik wajah secara otomatis melalui kamera.</p>
                         </div>
+                        <button onclick="switchTab('attendance')" class="text-xs text-slate-400 hover:text-white bg-slate-800/60 px-3 py-1.5 rounded-xl transition-colors">
+                            <i class="fa-solid fa-arrow-left mr-1"></i> Kembali
+                        </button>
                     </div>
 
-                    <form id="enroll-form" onsubmit="handleEnrollment(event)" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Nomor Induk Siswa (NIS / ID)</label>
-                                <input type="text" id="enroll-id" required placeholder="Contoh: 102938" class="w-full glass-input rounded-2xl px-4 py-3 text-sm text-slate-200 focus:outline-none">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Kelas</label>
-                                <input type="text" id="enroll-class" required placeholder="Contoh: X-RPL-1" class="w-full glass-input rounded-2xl px-4 py-3 text-sm text-slate-200 focus:outline-none">
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center flex-1">
+                        <!-- Pratinjau Kamera Pendaftaran -->
+                        <div class="md:col-span-5 relative rounded-xl overflow-hidden bg-slate-950 aspect-video md:h-full flex items-center justify-center border border-slate-800">
+                            <video id="webcam-enroll" autoplay muted playsinline class="absolute inset-0 w-full h-full object-cover transform -scale-x-100"></video>
+                            <div class="absolute inset-0 border-2 border-dashed border-indigo-500/30 rounded-xl pointer-events-none flex items-center justify-center">
+                                <div class="text-indigo-300/40 text-[10px] font-semibold tracking-widest uppercase bg-slate-950/80 px-2.5 py-1 rounded-lg">Kamera Pendaftar</div>
                             </div>
                         </div>
-                        <div>
-                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Nama Lengkap Siswa</label>
-                            <input type="text" id="enroll-name" required placeholder="Contoh: Siti Aminah" class="w-full glass-input rounded-2xl px-4 py-3 text-sm text-slate-200 focus:outline-none">
-                        </div>
-                        <button type="submit" id="enroll-btn" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold py-4 rounded-2xl transition-all shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2.5 border border-indigo-400/20 text-sm">
-                            <i class="fa-solid fa-camera-retro"></i> Mulai Pendaftaran Biometrik (3x Sampel)
-                        </button>
-                    </form>
+
+                        <!-- Form Input Pendaftaran -->
+                        <form id="enroll-form" onsubmit="handleEnrollment(event)" class="md:col-span-7 space-y-3">
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Nomor Induk Siswa (NIS)</label>
+                                    <input type="text" id="enroll-id" required placeholder="Contoh: 102938" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 transition-colors">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Kelas</label>
+                                    <input type="text" id="enroll-class" required placeholder="Contoh: X-RPL-1" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 transition-colors">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold uppercase tracking-wider text-slate-400 mb-1">Nama Lengkap Siswa</label>
+                                <input type="text" id="enroll-name" required placeholder="Contoh: Siti Aminah" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 transition-colors">
+                            </div>
+                            <button type="submit" id="enroll-btn" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-600/30 text-xs flex items-center justify-center gap-2">
+                                <i class="fa-solid fa-camera-retro"></i> Rekam & Daftarkan Biometrik (3x Sampel)
+                            </button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
         </div>
 
-        <!-- Kolom Kanan / Sidebar -->
-        <div class="space-y-6">
+        <!-- Kolom Kanan / Sidebar Status & Log Kehadiran Profesional (4 Kolom) -->
+        <div class="lg:col-span-4 flex flex-col h-full space-y-4 overflow-hidden">
             
-            <!-- Waktu & Tanggal Realtime -->
-            <div class="glass-card rounded-3xl p-6 shadow-2xl text-center bg-gradient-to-b from-slate-900/90 to-indigo-950/40 relative overflow-hidden">
-                <div class="absolute -right-12 -top-12 w-36 h-36 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none"></div>
-                <div id="current-time" class="text-3xl lg:text-4xl font-black tracking-tight text-indigo-300 font-mono drop-shadow-md">00:00:00</div>
-                <div id="current-date" class="text-xs text-slate-400 mt-2 uppercase tracking-widest font-bold">Rabu, 07 Okt 2026</div>
+            <!-- Waktu & Tanggal Realtime (Professional Widget) -->
+            <div class="glass-card rounded-2xl p-4 shadow-xl text-center shrink-0 bg-gradient-to-b from-slate-900/90 to-indigo-950/30 border border-slate-800/80">
+                <div id="current-time" class="text-3xl font-black tracking-tight text-indigo-300 font-mono">00:00:00</div>
+                <div id="current-date" class="text-[11px] text-slate-400 mt-1 uppercase tracking-widest font-semibold">Rabu, 07 Okt 2026</div>
             </div>
 
-            <!-- Panel Log Kehadiran Profesional (Kartu Grid/List Terstruktur) -->
-            <div class="glass-card rounded-3xl p-6 shadow-2xl flex flex-col h-[480px]">
-                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800/80">
-                    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-300 flex items-center gap-2">
-                        <i class="fa-solid fa-clipboard-user text-indigo-400"></i> Kehadiran Hari Ini
+            <!-- Tabel / Daftar Kehadiran Hari Ini (Profesional Layout) -->
+            <div class="glass-card rounded-2xl p-4 shadow-2xl flex flex-col flex-1 overflow-hidden border border-slate-800/80">
+                <div class="flex items-center justify-between mb-3 pb-2.5 border-b border-slate-800/80 shrink-0">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-user text-indigo-400"></i> Log Kehadiran Hari Ini
                     </h3>
-                    <span id="attendance-count" class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-3 py-1 rounded-full text-xs font-bold shadow-sm">0 Siswa</span>
+                    <span id="attendance-count" class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2 py-0.5 rounded-md text-[11px] font-semibold">0 Siswa</span>
                 </div>
                 
-                <div id="attendance-log-list" class="overflow-y-auto flex-1 pr-1 space-y-3">
-                    <!-- Status Kosong -->
-                    <div class="h-full flex flex-col items-center justify-center text-center p-6 text-slate-500">
-                        <i class="fa-solid fa-clock-rotate-left text-3xl mb-2 opacity-30"></i>
-                        <p class="text-xs italic">Belum ada data kehadiran tercatat hari ini.</p>
+                <!-- Daftar Log dengan Kartu Profesional -->
+                <div class="overflow-y-auto flex-1 space-y-2 pr-1" id="attendance-log-list">
+                    <div class="text-center py-16 text-slate-500 text-xs italic">
+                        Belum ada data kehadiran tercatat hari ini.
                     </div>
                 </div>
             </div>
@@ -261,9 +227,9 @@
 
     </main>
 
-    <!-- Script Logika Aplikasi -->
+    <!-- Script Logika Aplikasi & Fitur Profesional -->
     <script>
-        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxo6SIhVPuLGTUaNqzfe6yJfAOkGLs_EqHDBd9CxVuOKf4ZTqtNQDRkzhVGRXUf1OP_ZA/exec";
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwo7Q72GVtRPWSTA2hED7_UBNnEbZVpU8dm4666l1tPf6-ANXtAGP8gPnva-QxkgGoF6Q/exec";
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
         
         let video = document.getElementById('webcam');
@@ -282,71 +248,54 @@
             document.getElementById('current-date').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
         }, 1000);
 
-        // Fitur Fullscreen Futuristis Profesional
-        function toggleFullScreen() {
-            const icon = document.getElementById('fullscreen-icon');
-            if (!document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(err => {
-                    alert(`Gagal mengaktifkan fullscreen: ${err.message}`);
-                });
-                icon.classList.remove('fa-expand');
-                icon.classList.add('fa-compress');
-            } else {
-                if (document.exitFullscreen) {
-                    document.exitFullscreen();
-                }
-                icon.classList.remove('fa-compress');
-                icon.classList.add('fa-expand');
-            }
-        }
-
-        document.addEventListener('fullscreenchange', () => {
-            const icon = document.getElementById('fullscreen-icon');
-            if (!document.fullscreenElement) {
-                icon.classList.remove('fa-compress');
-                icon.classList.add('fa-expand');
-            } else {
-                icon.classList.remove('fa-expand');
-                icon.classList.add('fa-compress');
-            }
-        });
-
-        // Kontrol Password Pendaftaran (PIN: 100)
-        function requestEnrollmentAccess() {
-            document.getElementById('password-modal').classList.remove('hidden');
-            document.getElementById('pin-input').value = '';
-            document.getElementById('pin-input').focus();
-        }
-
-        function closePasswordModal() {
-            document.getElementById('password-modal').classList.add('hidden');
-        }
-
-        function verifyPassword(e) {
-            e.preventDefault();
-            const pin = document.getElementById('pin-input').value.trim();
-            if (pin === "100") {
-                closePasswordModal();
-                switchTab('enrollment');
-            } else {
-                alert("PIN Keamanan Salah! Akses ditolak.");
-                document.getElementById('pin-input').value = '';
-                document.getElementById('pin-input').focus();
-            }
-        }
-
         function switchTab(tabName) {
             ['attendance', 'enrollment'].forEach(t => {
                 document.getElementById(`tab-${t}`).classList.add('hidden');
             });
-            document.getElementById('btn-tab-attendance').className = "px-5 py-2.5 rounded-xl text-sm font-semibold transition-all text-slate-400 hover:text-white";
-            document.getElementById('btn-tab-enrollment').className = "px-5 py-2.5 rounded-xl text-sm font-semibold transition-all text-slate-400 hover:text-white";
+            
+            document.getElementById('btn-tab-attendance').className = "px-4 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white";
+            document.getElementById('btn-tab-enrollment').className = "px-4 py-1.5 rounded-lg text-xs font-semibold transition-all text-slate-400 hover:text-white";
 
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-            if (tabName === 'attendance') {
-                document.getElementById('btn-tab-attendance').className = "px-5 py-2.5 rounded-xl text-sm font-semibold transition-all bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/30";
+            document.getElementById(`btn-tab-${tabName}`).className = "px-4 py-1.5 rounded-lg text-xs font-semibold transition-all bg-indigo-600 text-white shadow-md shadow-indigo-600/30";
+        }
+
+        // Keamanan PIN Pendaftaran (PIN: 100)
+        function requestEnrollmentAccess() {
+            document.getElementById('pin-modal').classList.remove('hidden');
+            document.getElementById('pin-input').value = '';
+            document.getElementById('pin-input').focus();
+        }
+
+        function closePinModal() {
+            document.getElementById('pin-modal').classList.add('hidden');
+        }
+
+        function verifyPin(e) {
+            e.preventDefault();
+            const pin = document.getElementById('pin-input').value.trim();
+            if (pin === "100") {
+                closePinModal();
+                switchTab('enrollment');
             } else {
-                document.getElementById('btn-tab-enrollment').className = "px-5 py-2.5 rounded-xl text-sm font-semibold transition-all bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-lg shadow-indigo-600/30";
+                alert("PIN Salah! Akses ditolak.");
+                document.getElementById('pin-input').value = '';
+            }
+        }
+
+        // Mode Fullscreen Profesional
+        function toggleFullScreen() {
+            const icon = document.getElementById('fullscreen-icon');
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`Error attempting to enable full-screen mode: ${err.message}`);
+                });
+                icon.className = "fa-solid fa-compress";
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+                icon.className = "fa-solid fa-expand";
             }
         }
 
@@ -389,10 +338,10 @@
                     videoEnroll.play();
                 };
 
-                document.getElementById('system-status').className = "px-3.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-semibold shadow-sm flex items-center gap-2";
-                document.getElementById('system-status').innerHTML = `<i class="fa-solid fa-circle text-[8px] text-emerald-400 animate-pulse"></i> Kamera Aktif & Aman`;
+                document.getElementById('system-status').className = "px-2.5 py-0.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-[11px] font-medium";
+                document.getElementById('system-status').innerHTML = `<i class="fa-solid fa-circle text-[6px] mr-1 text-emerald-400"></i> Kamera Aktif`;
             } catch (err) {
-                document.getElementById('system-status').className = "px-3.5 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-full text-xs font-semibold shadow-sm";
+                document.getElementById('system-status').className = "px-2.5 py-0.5 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-full text-[11px] font-medium";
                 document.getElementById('system-status').innerHTML = `Akses Kamera Ditolak`;
             }
         }
@@ -415,9 +364,7 @@
         });
 
         async function syncWithCloud() {
-            if (SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT_URL")) {
-                return;
-            }
+            if (SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT_URL")) return;
 
             const icon = document.getElementById('sync-icon');
             icon.classList.add('fa-spin');
@@ -439,40 +386,39 @@
             }
         }
 
+        // Pembaruan Tampilan Kartu Log Kehadiran Profesional
         function updateAttendanceUI() {
-            const containerEl = document.getElementById('attendance-log-list');
+            const tbodyEl = document.getElementById('attendance-log-list');
             document.getElementById('attendance-count').innerText = `${attendanceLogs.length} Siswa`;
             
             if (attendanceLogs.length === 0) {
-                containerEl.innerHTML = `
-                    <div class="h-full flex flex-col items-center justify-center text-center p-6 text-slate-500">
-                        <i class="fa-solid fa-clock-rotate-left text-3xl mb-2 opacity-30"></i>
-                        <p class="text-xs italic">Belum ada data kehadiran tercatat hari ini.</p>
-                    </div>`;
+                tbodyEl.innerHTML = `<div class="text-center py-16 text-slate-500 text-xs italic">Belum ada data kehadiran tercatat hari ini.</div>`;
                 return;
             }
 
-            containerEl.innerHTML = attendanceLogs.map(log => `
-                <div class="log-item-card rounded-2xl p-3.5 flex items-center justify-between shadow-sm">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold text-sm shrink-0">
-                            ${log.name.charAt(0).toUpperCase()}
-                        </div>
-                        <div>
-                            <h4 class="text-xs font-bold text-slate-100">${log.name}</h4>
-                            <div class="flex items-center gap-2 mt-0.5">
-                                <span class="px-2 py-0.5 rounded-md bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-semibold text-indigo-300">${log.className}</span>
-                                <span class="text-[10px] text-slate-400 font-mono">ID: ${log.id}</span>
+            tbodyEl.innerHTML = attendanceLogs.map(log => {
+                const initials = log.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                return `
+                    <div class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/80 flex items-center justify-between gap-3 hover:bg-slate-900 transition-colors">
+                        <div class="flex items-center gap-2.5 min-w-0">
+                            <div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 font-bold text-xs flex items-center justify-center shrink-0">
+                                ${initials}
+                            </div>
+                            <div class="min-w-0">
+                                <div class="font-bold text-slate-200 text-xs truncate">${log.name}</div>
+                                <div class="text-[10px] text-slate-400 flex items-center gap-1.5">
+                                    <span>ID: ${log.id}</span>
+                                    <span>•</span>
+                                    <span class="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-300 font-medium">${log.className}</span>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="text-right shrink-0">
-                        <div class="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl shadow-inner">
+                        <div class="font-mono text-xs font-semibold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-2 py-1 rounded-lg shrink-0">
                             ${log.time}
                         </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         async function handleEnrollment(e) {
@@ -490,15 +436,15 @@
             let collectedDescriptors = [];
             
             for (let i = 1; i <= 3; i++) {
-                submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Mengambil Sampel Wajah ke-${i}/3...`;
+                submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Mengambil Sampel Wajah ${i}/3...`;
                 await new Promise(resolve => setTimeout(resolve, 800));
 
                 const detection = await fa.detectSingleFace(videoEnroll, new fa.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
 
                 if (!detection) {
-                    alert(`Sampel ke-${i} gagal mendeteksi wajah. Pastikan posisi menghadap lurus ke kamera pendaftaran.`);
+                    alert(`Sampel ke-${i} gagal mendeteksi wajah. Pastikan posisi menghadap lurus ke kamera.`);
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = `<i class="fa-solid fa-camera-retro"></i> Mulai Pendaftaran Biometrik (3x Sampel)`;
+                    submitBtn.innerHTML = `<i class="fa-solid fa-camera-retro"></i> Rekam & Daftarkan Biometrik (3x Sampel)`;
                     return;
                 }
 
@@ -506,7 +452,7 @@
             }
 
             try {
-                submitBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up animate-pulse"></i> Menyimpan ke Database Cloud...`;
+                submitBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up animate-pulse"></i> Menyimpan ke Cloud...`;
                 
                 let existing = studentsCache.find(s => s.id === id);
                 if (existing) {
@@ -531,7 +477,7 @@
                 alert("Gagal menyimpan ke cloud: " + err.message);
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = `<i class="fa-solid fa-camera-retro"></i> Mulai Pendaftaran Biometrik (3x Sampel)`;
+                submitBtn.innerHTML = `<i class="fa-solid fa-camera-retro"></i> Rekam & Daftarkan Biometrik (3x Sampel)`;
             }
         }
 
@@ -583,11 +529,10 @@
 
                     resizedDetections.forEach(detection => {
                         let box = detection.detection.box;
-                        
                         const mirroredX = canvas.width - (box.x + box.width);
                         const adjustedBox = { x: mirroredX, y: box.y, width: box.width, height: box.height };
 
-                        let labelText = "Belum Dikenali";
+                        let labelText = "Tidak Dikenali";
                         let boxColor = "#f43f5e";
 
                         if (studentsCache.length > 0) {
@@ -620,7 +565,7 @@
                                     sendAttendanceToCloud(match.id, match.name, match.className);
                                 }
                             } else {
-                                labelText = "Belum Dikenali";
+                                labelText = "Tidak Dikenali";
                                 boxColor = "#f43f5e";
                                 activeStatusMessages.push("Wajah Tidak Dikenali");
                             }
@@ -631,15 +576,15 @@
                         }
 
                         ctx.strokeStyle = boxColor;
-                        ctx.lineWidth = 3;
+                        ctx.lineWidth = 2.5;
                         ctx.strokeRect(adjustedBox.x, adjustedBox.y, adjustedBox.width, adjustedBox.height);
 
                         ctx.fillStyle = boxColor;
-                        ctx.fillRect(adjustedBox.x, adjustedBox.y - 28, adjustedBox.width, 28);
+                        ctx.fillRect(adjustedBox.x, adjustedBox.y - 24, adjustedBox.width, 24);
 
                         ctx.fillStyle = '#ffffff';
-                        ctx.font = 'bold 12px sans-serif';
-                        ctx.fillText(labelText, adjustedBox.x + 8, adjustedBox.y - 9);
+                        ctx.font = 'bold 11px sans-serif';
+                        ctx.fillText(labelText, adjustedBox.x + 6, adjustedBox.y - 8);
                     });
 
                     if (activeStatusMessages.length > 0) {
