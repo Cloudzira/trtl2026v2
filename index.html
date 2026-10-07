@@ -20,8 +20,8 @@
                 Memuat Halaman Mushaf...
             </div>
 
-            <!-- Menggunakan CDN alternatif gambar Quran yang stabil -->
-            <img id="mushaf-page-img" src="" alt="Halaman Al-Quran" class="w-full h-auto object-contain max-h-[75vh]" onload="hideLoader()" onerror="tryAlternativeImage(this)">
+            <!-- Menggunakan sumber gambar dari repositori publik yang stabil -->
+            <img id="mushaf-page-img" src="" alt="Halaman Al-Quran" class="w-full h-auto object-contain max-h-[75vh]" onload="hideLoader()" onerror="showError()">
         </div>
 
         <div class="flex items-center justify-between w-full mt-4 px-2">
@@ -42,17 +42,12 @@
     <script>
         let currentPage = 1;
         const totalPages = 604;
-        let useAlternativeCDN = false;
 
         function getPageImageUrl(pageNum) {
+            // Format angka menjadi 3 digit (contoh: 1 -> 001)
             const paddedNum = String(pageNum).padStart(3, '0');
-            if (!useAlternativeCDN) {
-                // Sumber utama (CDN Quran Central / King Fahd Complex images format)
-                return `https://www.qurancentral.com/wp-content/uploads/pages/${paddedNum}.png`;
-            } else {
-                // Sumber cadangan (EveryAyah format)
-                return `https://www.everyayah.com/data/images_png/page${paddedNum}.png`;
-            }
+            // Menggunakan CDN raw dari github repository quran images standar
+            return `https://raw.githubusercontent.com/fawazahmed0/quran-images/master/images/page${paddedNum}.png`;
         }
 
         function loadPage(pageNum) {
@@ -67,22 +62,19 @@
         }
 
         function showLoader() {
-            document.getElementById('image-loader').style.display = 'flex';
-            document.getElementById('image-loader').innerText = 'Memuat Halaman Mushaf...';
+            const loader = document.getElementById('image-loader');
+            loader.style.display = 'flex';
+            loader.innerText = 'Memuat Halaman Mushaf...';
         }
 
         function hideLoader() {
             document.getElementById('image-loader').style.display = 'none';
         }
 
-        function tryAlternativeImage(imgElement) {
-            if (!useAlternativeCDN) {
-                useAlternativeCDN = true;
-                imgElement.src = getPageImageUrl(currentPage);
-            } else {
-                document.getElementById('image-loader').style.display = 'flex';
-                document.getElementById('image-loader').innerText = 'Gagal memuat gambar halaman.';
-            }
+        function showError() {
+            const loader = document.getElementById('image-loader');
+            loader.style.display = 'flex';
+            loader.innerText = 'Gagal memuat gambar halaman.';
         }
 
         function nextPage() {
