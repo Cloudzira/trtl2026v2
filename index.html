@@ -86,11 +86,11 @@
                     </div>
 
                     <!-- Kotak Video & Canvas -->
-                    <div class="relative rounded-2xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center border border-slate-800 shadow-inner">
+                    <div id="video-container" class="relative rounded-2xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center border border-slate-800 shadow-inner">
                         <video id="webcam" autoplay muted playsinline class="absolute inset-0 w-full h-full object-cover transform -scale-x-100"></video>
-                        <canvas id="overlay" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
+                        <canvas id="overlay" class="absolute inset-0 w-full h-full pointer-events-none z-10"></canvas>
                         
-                        <div class="absolute inset-0 border-2 border-dashed border-indigo-500/20 rounded-2xl pointer-events-none flex items-center justify-center">
+                        <div class="absolute inset-0 border-2 border-dashed border-indigo-500/20 rounded-2xl pointer-events-none flex items-center justify-center z-0">
                             <div class="text-indigo-300/30 text-xs font-semibold tracking-widest uppercase bg-slate-950/60 px-4 py-2 rounded-xl backdrop-blur-sm">Posisikan Wajah Di Sini</div>
                         </div>
                     </div>
@@ -206,7 +206,6 @@
                 await fa.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
 
                 isModelLoaded = true;
-                
                 await syncWithCloud();
                 
                 document.getElementById('loading-modal').classList.add('hidden');
@@ -223,12 +222,10 @@
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false });
                 video.srcObject = stream;
                 
-                // Pastikan ukuran canvas disesuaikan setelah video siap memuat metadatanya
                 video.onloadedmetadata = () => {
-                    const fa = window.faceapi || window.faceapi?.default;
-                    const displaySize = { width: video.videoWidth || 640, height: video.videoHeight || 480 };
-                    fa.matchDimensions(canvas, displaySize);
-                    startFaceRecognitionLoop(displaySize);
+                    video.play();
+                    setupCanvasDimensions();
+                    startFaceRecognitionLoop();
                 };
 
                 document.getElementById('system-status').className = "px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-medium";
@@ -239,9 +236,27 @@
             }
         }
 
+        function setupCanvasDimensions() {
+            const fa = window.faceapi || window.faceapi?.default;
+            const container = document.getElementById('video-container');
+            
+            // Mengatur ukuran canvas agar presisi menyesuaikan ukuran render video di DOM
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            
+            const displaySize = { width: container.clientWidth, height: container.clientHeight };
+            fa.matchDimensions(canvas, displaySize);
+        }
+
+        // Handle resize window agar kotak tracking tidak bergeser saat ukuran layar berubah
+        window.addEventListener('resize', () => {
+            if (isModelLoaded && video.srcObject) {
+                setupCanvasDimensions();
+            }
+        });
+
         async function syncWithCloud() {
             if (SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT_URL")) {
-                document.getElementById('loading-modal').classList.add('hidden');
                 return;
             }
 
@@ -340,10 +355,12 @@
                     studentsCache.push({ id, name, className, descriptors: [descriptorArray] });
                 }
 
-                await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "register", id, name, className, descriptor: descriptorArray })
-                });
+                if (!SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT_URL")) {
+                    await fetch(SCRIPT_URL, {
+                        method: "POST",
+                        body: JSON.stringify({ action: "register", id, name, className, descriptor: descriptorArray })
+                    });
+                }
 
                 alert(`Siswa ${name} (${className}) berhasil didaftarkan!`);
                 document.getElementById('enroll-form').reset();
@@ -357,84 +374,100 @@
             }
         }
 
-        // Looping Pemindai Wajah Realtime
-        function startFaceRecognitionLoop(displaySize) {
+        // Looping Pemindai Wajah Realtime dengan Render Kotak Tracking Langsung
+        function startFaceRecognitionLoop() {
             const fa = window.faceapi || window.faceapi?.default;
+            const container = document.getElementById('video-container');
 
             setInterval(async () => {
                 if (!isModelLoaded || video.paused || video.ended) return;
 
+                // Menggunakan deteksi dengan ukuran layar aktif container
+                const displaySize = { width: container.clientWidth, height: container.clientHeight };
+                
                 const detections = await fa.detectAllFaces(video, new fa.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
                 const resizedDetections = fa.resizeResults(detections, displaySize);
                 
                 const ctx = canvas.getContext('2d');
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                if (resizedDetections.length > 0 && faceMatcher) {
+                if (resizedDetections.length > 0) {
                     resizedDetections.forEach(detection => {
-                        const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
                         let box = detection.detection.box;
                         
-                        // Menyesuaikan koordinat kotak karena video di-mirror (flip horizontal)
+                        // Menyesuaikan koordinat kotak karena video di-mirror (flip horizontal CSS -scale-x-100)
                         const mirroredX = canvas.width - (box.x + box.width);
-                        const adjustedBox = new fa.Rectangle(mirroredX, box.y, box.width, box.height);
+                        const adjustedBox = { x: mirroredX, y: box.y, width: box.width, height: box.height };
 
-                        const labelText = bestMatch.label !== 'unknown' ? bestMatch.label.split('_')[2] : 'Tidak Dikenali';
-                        const boxColor = bestMatch.label !== 'unknown' ? '#10b981' : '#f43f5e';
+                        let labelText = "Wajah Terdeteksi";
+                        let boxColor = "#6366f1"; // Warna Indigo default jika belum ada matcher / belum dikenal
 
-                        // Menggambar kotak dan teks secara manual
+                        if (faceMatcher) {
+                            const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
+                            if (bestMatch.label !== 'unknown') {
+                                labelText = bestMatch.label.split('_')[2];
+                                boxColor = "#10b981"; // Hijau jika dikenal
+
+                                const parts = bestMatch.label.split('_');
+                                const empId = parts[0];
+                                const empClass = parts[1];
+                                const empName = parts[2];
+
+                                document.getElementById('recognition-result').innerText = `Halo, ${empName} (${empClass})!`;
+                                document.getElementById('match-badge').classList.remove('hidden');
+
+                                const nowTime = new Date().getTime();
+                                if (!lastRecordedTime[empId] || (nowTime - lastRecordedTime[empId] > 120000)) {
+                                    lastRecordedTime[empId] = nowTime;
+                                    
+                                    const nowObj = new Date();
+                                    const dateStr = nowObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+                                    const timeStr = nowObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                                    attendanceLogs.unshift({
+                                        date: dateStr,
+                                        className: empClass,
+                                        id: empId,
+                                        name: empName,
+                                        time: timeStr
+                                    });
+
+                                    updateAttendanceUI();
+                                    sendAttendanceToCloud(empId, empName, empClass);
+                                }
+                            } else {
+                                labelText = "Tidak Dikenali";
+                                boxColor = "#f43f5e"; // Merah jika tidak dikenal
+                                document.getElementById('recognition-result').innerText = "Wajah tidak terdaftar di database.";
+                                document.getElementById('match-badge').classList.add('hidden');
+                            }
+                        } else {
+                            document.getElementById('recognition-result').innerText = "Wajah terdeteksi (Belum ada data siswa / FaceMatcher)";
+                        }
+
+                        // Menggambar Kotak Tracking (Bounding Box) di Canvas secara Manual
                         ctx.strokeStyle = boxColor;
                         ctx.lineWidth = 3;
                         ctx.strokeRect(adjustedBox.x, adjustedBox.y, adjustedBox.width, adjustedBox.height);
 
+                        // Menggambar Background Label Teks
                         ctx.fillStyle = boxColor;
                         ctx.fillRect(adjustedBox.x, adjustedBox.y - 28, adjustedBox.width, 28);
 
+                        // Menggambar Teks Nama / Keterangan di Atas Kotak
                         ctx.fillStyle = '#ffffff';
-                        ctx.font = 'bold 14px sans-serif';
+                        ctx.font = 'bold 13px sans-serif';
                         ctx.fillText(labelText, adjustedBox.x + 8, adjustedBox.y - 9);
-
-                        if (bestMatch.label !== 'unknown') {
-                            const parts = bestMatch.label.split('_');
-                            const empId = parts[0];
-                            const empClass = parts[1];
-                            const empName = parts[2];
-
-                            document.getElementById('recognition-result').innerText = `Halo, ${empName} (${empClass})!`;
-                            document.getElementById('match-badge').classList.remove('hidden');
-
-                            const nowTime = new Date().getTime();
-                            if (!lastRecordedTime[empId] || (nowTime - lastRecordedTime[empId] > 120000)) {
-                                lastRecordedTime[empId] = nowTime;
-                                
-                                const nowObj = new Date();
-                                const dateStr = nowObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-                                const timeStr = nowObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-                                attendanceLogs.unshift({
-                                    date: dateStr,
-                                    className: empClass,
-                                    id: empId,
-                                    name: empName,
-                                    time: timeStr
-                                });
-
-                                updateAttendanceUI();
-                                sendAttendanceToCloud(empId, empName, empClass);
-                            }
-                        } else {
-                            document.getElementById('recognition-result').innerText = "Wajah tidak terdaftar di database.";
-                            document.getElementById('match-badge').classList.add('hidden');
-                        }
                     });
                 } else {
                     document.getElementById('recognition-result').innerText = "Memindai wajah di depan kamera...";
                     document.getElementById('match-badge').classList.add('hidden');
                 }
-            }, 600);
+            }, 300); // Dipercepat intervalnya menjadi 300ms agar responsif
         }
 
         async function sendAttendanceToCloud(id, name, className) {
+            if (SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT_URL")) return;
             try {
                 await fetch(SCRIPT_URL, {
                     method: "POST",
