@@ -3,60 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mushaf Al-Qur'an Digital</title>
+    <title>Mushaf Al-Qur'an Tajwid - Flipbook</title>
+    <!-- Tailwind CSS untuk Layout -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .book-shadow {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+    </style>
 </head>
-<body class="bg-slate-900 min-h-screen flex flex-col items-center justify-between p-4">
+<body class="bg-gradient-to-br from-slate-900 via-emerald-950 to-teal-950 min-h-screen flex flex-col items-center justify-between p-4">
 
-    <header class="text-center text-white py-2">
-        <h1 class="text-xl font-bold">Mushaf Al-Qur'an Digital</h1>
-        <p class="text-xs text-emerald-300">Navigasi Halaman (1 - 604)</p>
+    <!-- Header -->
+    <header class="text-center text-white py-3">
+        <h1 class="text-xl md:text-2xl font-bold tracking-wide">Mushaf Al-Qur'an Tajwid Digital</h1>
+        <p class="text-xs text-emerald-300">Navigasi Halaman Buku (1 - 604)</p>
     </header>
 
+    <!-- Main Flipbook Viewport -->
     <main class="w-full max-w-md flex flex-col items-center my-auto">
-        <div class="relative w-full bg-amber-50 rounded-lg border-4 border-amber-900 flex justify-center items-center p-2 min-h-[400px]">
+        
+        <!-- Wadah Gambar Halaman Mushaf -->
+        <div class="relative w-full bg-white rounded-lg overflow-hidden book-shadow border-8 border-amber-900 flex justify-center items-center p-2 bg-amber-50">
             
+            <!-- Indikator Loading Gambar -->
             <div id="image-loader" class="absolute inset-0 flex items-center justify-center bg-amber-50 text-amber-900 text-sm font-medium z-10">
                 Memuat Halaman Mushaf...
             </div>
 
-            <!-- Menggunakan sumber imej rasmi yang stabil -->
-            <img id="mushaf-page-img" src="" alt="Halaman Al-Quran" class="w-full h-auto object-contain max-h-[70vh]" onload="hideLoader()" onerror="handleImageError()">
+            <!-- Elemen Gambar Halaman -->
+            <img id="mushaf-page-img" src="" alt="Halaman Al-Quran" class="w-full h-auto object-contain max-h-[70vh]" onload="hideLoader()">
         </div>
 
-        <div class="flex items-center justify-between w-full mt-4 px-2">
-            <button onclick="prevPage()" id="btn-prev" class="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-30 text-white px-4 py-2 rounded-full text-sm font-semibold">
+        <!-- Kontrol Navigasi Halaman -->
+        <div class="flex items-center justify-between w-full mt-6 px-2">
+            <button onclick="prevPage()" id="btn-prev" class="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-30 text-white px-5 py-2 rounded-full font-semibold text-sm shadow transition flex items-center gap-1">
                 &larr; Sebelumnya
             </button>
             
-            <span id="page-indicator" class="text-white text-sm bg-black/40 px-3 py-1 rounded-full">
+            <span id="page-indicator" class="text-white font-medium text-sm bg-black/30 px-4 py-1.5 rounded-full">
                 Halaman 1 / 604
             </span>
 
-            <button onclick="nextPage()" id="btn-next" class="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-30 text-white px-4 py-2 rounded-full text-sm font-semibold">
+            <button onclick="nextPage()" id="btn-next" class="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-30 text-white px-5 py-2 rounded-full font-semibold text-sm shadow transition flex items-center gap-1">
                 Selanjutnya &rarr;
             </button>
         </div>
+
     </main>
 
+    <!-- Footer -->
+    <footer class="text-center text-xs text-emerald-400/80 py-2">
+        Tampilan Lembaran Mushaf Per Halaman
+    </footer>
+
+    <!-- JavaScript Logika Perpindahan Halaman Gambar -->
     <script>
         let currentPage = 1;
-        const totalPages = 604;
+        const totalPages = 604; // Total halaman standar mushaf
 
         function getPageImageUrl(pageNum) {
-            // Format angka menjadi 3 digit (cth: 1 -> 001)
+            // Format 3 digit angka (contoh: 1 jadi 001, 15 jadi 015)
             const paddedNum = String(pageNum).padStart(3, '0');
-            // Menggunakan CDN repository Quran pages yang stabil
+            
+            // Menggunakan CDN gambar mushaf publik (Anda juga bisa ganti dengan folder lokal server Anda)
             return `https://www.everyayah.com/data/images_png/page${paddedNum}.png`;
         }
 
         function loadPage(pageNum) {
             showLoader();
             currentPage = pageNum;
+            
             const imgElement = document.getElementById('mushaf-page-img');
             imgElement.src = getPageImageUrl(currentPage);
             
+            // Perbarui teks indikator
             document.getElementById('page-indicator').innerText = `Halaman ${currentPage} / ${totalPages}`;
+            
+            // Atur status tombol aktif/nonaktif
             document.getElementById('btn-prev').disabled = currentPage <= 1;
             document.getElementById('btn-next').disabled = currentPage >= totalPages;
         }
@@ -69,19 +93,19 @@
             document.getElementById('image-loader').classList.add('hidden');
         }
 
-        function handleImageError() {
-            document.getElementById('image-loader').classList.remove('hidden');
-            document.getElementById('image-loader').innerText = 'Gagal memuat gambar. Pastikan menggunakan Local Server.';
-        }
-
         function nextPage() {
-            if (currentPage < totalPages) loadPage(currentPage + 1);
+            if (currentPage < totalPages) {
+                loadPage(currentPage + 1);
+            }
         }
 
         function prevPage() {
-            if (currentPage > 1) loadPage(currentPage - 1);
+            if (currentPage > 1) {
+                loadPage(currentPage - 1);
+            }
         }
 
+        // Inisialisasi muat halaman pertama saat dibuka
         loadPage(currentPage);
     </script>
 </body>
