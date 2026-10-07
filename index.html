@@ -18,11 +18,11 @@
         body {
             background-color: #020617;
             color: #f8fafc;
-            height: 100vh;
+            min-height: 100vh;
             width: 100vw;
-            overflow: hidden;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
         }
         /* Glassmorphism Styles */
         .glass-card {
@@ -37,15 +37,17 @@
             backdrop-filter: blur(12px);
             border-bottom: 1px solid rgba(255, 255, 255, 0.06);
         }
-        /* Layout Utama */
+        /* Layout Utama Responsive */
         header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 0.75rem 1.5rem;
+            padding: 0.75rem 1rem;
             z-index: 40;
             box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
             flex-shrink: 0;
+            flex-wrap: wrap;
+            gap: 0.75rem;
         }
         main {
             flex: 1;
@@ -56,12 +58,16 @@
             max-width: 1700px;
             width: 100%;
             margin: 0 auto;
-            overflow: hidden;
         }
         @media (max-width: 1024px) {
             main {
                 grid-template-columns: 1fr;
+                height: auto;
+                overflow-y: visible;
+            }
+            body {
                 overflow-y: auto;
+                height: auto;
             }
         }
         /* Navigasi & Tombol */
@@ -74,7 +80,7 @@
             gap: 0.25rem;
         }
         .nav-btn {
-            padding: 0.45rem 1rem;
+            padding: 0.45rem 0.85rem;
             border-radius: 0.5rem;
             font-size: 0.75rem;
             font-weight: 600;
@@ -85,7 +91,7 @@
             background: transparent;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
         }
         .nav-btn.active {
             background: #4f46e5;
@@ -93,7 +99,7 @@
             box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
         }
         .action-btn {
-            padding: 0.45rem 0.85rem;
+            padding: 0.45rem 0.75rem;
             border-radius: 0.75rem;
             font-size: 0.75rem;
             font-weight: 500;
@@ -101,7 +107,7 @@
             border: 1px solid;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.4rem;
             transition: all 0.2s ease;
         }
         .btn-sync {
@@ -121,15 +127,12 @@
         .panel-content {
             display: flex;
             flex-direction: column;
-            height: 100%;
-            overflow: hidden;
             gap: 0.75rem;
+            min-height: 480px;
         }
         .panel-sidebar {
             display: flex;
             flex-direction: column;
-            height: 100%;
-            overflow: hidden;
             gap: 0.75rem;
         }
         /* Video Container */
@@ -138,7 +141,8 @@
             background: #020617;
             border-radius: 1rem;
             overflow: hidden;
-            flex: 1;
+            width: 100%;
+            aspect-ratio: 16/9;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -162,7 +166,7 @@
         }
         /* Form & Input */
         .form-group {
-            margin-bottom: 0.75srem;
+            margin-bottom: 0.75rem;
         }
         label {
             display: block;
@@ -202,8 +206,8 @@
 
         /* Log Kehadiran List */
         .log-container {
+            max-height: 350px;
             overflow-y: auto;
-            flex: 1;
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
@@ -232,6 +236,19 @@
             padding: 1rem;
         }
         .hidden { display: none !important; }
+        
+        /* Responsive Grid untuk Pendaftaran */
+        .enroll-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 1rem;
+            align-items: center;
+        }
+        @media (max-width: 768px) {
+            .enroll-grid {
+                grid-template-columns: 1fr;
+            }
+        }
         /* Scrollbar */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.5); }
@@ -252,7 +269,7 @@
             </div>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
             <nav class="nav-tabs">
                 <button onclick="switchTab('attendance')" id="btn-tab-attendance" class="nav-btn active">
                     <i class="fa-solid fa-camera"></i> Presensi
@@ -267,7 +284,7 @@
             </button>
 
             <button onclick="toggleFullScreen()" class="action-btn btn-fullscreen" title="Mode Layar Penuh">
-                <i class="fa-solid fa-expand" id="fullscreen-icon"></i> <span>Fullscreen</span>
+                <i class="fa-solid fa-expand" id="fullscreen-icon"></i> <span>Full</span>
             </button>
         </div>
     </header>
@@ -304,15 +321,15 @@
         </div>
     </div>
 
-    <!-- Main Container -->
+    <!-- Main Container Responsive -->
     <main>
         <!-- Kolom Kiri: Area Konten Utama -->
-        <div style="display: flex; flex-direction: column; height: 100%; overflow: hidden;">
+        <div style="display: flex; flex-direction: column; gap: 1rem;">
             
             <!-- Tab 1: Presensi -->
             <div id="tab-attendance" class="panel-content">
-                <div class="glass-card" style="padding: 1rem; display: flex; flex-direction: column; height: 100%;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem; flex-shrink: 0;">
+                <div class="glass-card" style="padding: 1rem; display: flex; flex-direction: column;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
                         <div style="display: flex; align-items: center; gap: 0.5rem;">
                             <span style="width: 8px; height: 8px; border-radius: 9999px; background: #6366f1;"></span>
                             <h2 style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #cbd5e1;">Live Face Scanner</h2>
@@ -332,7 +349,7 @@
                     </div>
 
                     <!-- Status Bar -->
-                    <div style="margin-top: 0.75rem; padding: 0.75rem 1rem; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 0.75rem; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
+                    <div style="margin-top: 0.75rem; padding: 0.75rem 1rem; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 0.75rem; display: flex; align-items: center; justify-content: space-between;">
                         <div style="min-width: 0; flex: 1; margin-right: 0.75rem;">
                             <p style="font-size: 0.6rem; text-transform: uppercase; letter-spacing: 0.05em; color: #94a3b8; font-weight: 600;">Hasil Pemindaian</p>
                             <p id="recognition-result" style="font-size: 0.8rem; font-weight: 700; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Memindai wajah siswa...</p>
@@ -346,11 +363,11 @@
 
             <!-- Tab 2: Pendaftaran Siswa (Protected) -->
             <div id="tab-enrollment" class="panel-content hidden">
-                <div class="glass-card" style="padding: 1.25rem; display: flex; flex-direction: column; height: 100%; overflow-y: auto;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-shrink: 0;">
+                <div class="glass-card" style="padding: 1.25rem; display: flex; flex-direction: column;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                         <div>
                             <h2 style="font-size: 0.9rem; font-weight: 700; color: white; display: flex; align-items: center; gap: 0.5rem;">
-                                <i class="fa-solid fa-user-plus" style="color: #818cf8;"></i> Pendaftaran Siswa Baru (Multi-Sampel Biometrik)
+                                <i class="fa-solid fa-user-plus" style="color: #818cf8;"></i> Pendaftaran Siswa Baru
                             </h2>
                             <p style="font-size: 0.7rem; color: #94a3b8; margin-top: 0.15rem;">Sistem merekam 3 sampel biometrik wajah secara otomatis melalui kamera.</p>
                         </div>
@@ -359,8 +376,8 @@
                         </button>
                     </div>
 
-                    <div style="display: grid; grid-template-columns: 1fr 1.2fr; gap: 1rem; align-items: center; flex: 1;" class="enroll-grid">
-                        <div class="video-box" style="aspect-ratio: 16/9; min-height: 180px;">
+                    <div class="enroll-grid">
+                        <div class="video-box">
                             <video id="webcam-enroll" autoplay muted playsinline></video>
                             <div style="position: absolute; inset: 0; border: 2px dashed rgba(99, 102, 241, 0.3); border-radius: 1rem; pointer-events: none; display: flex; align-items: center; justify-content: center;">
                                 <div style="background: rgba(2, 6, 23, 0.85); padding: 0.3rem 0.75rem; border-radius: 0.4rem; font-size: 0.6rem; font-weight: 600; text-transform: uppercase; color: #a5b4fc;">Kamera Pendaftar</div>
@@ -370,7 +387,7 @@
                         <form id="enroll-form" onsubmit="handleEnrollment(event)" style="display: flex; flex-direction: column; gap: 0.75rem;">
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                                 <div class="form-group" style="margin-bottom: 0;">
-                                    <label>Nomor Induk Siswa (NIS)</label>
+                                    <label>Nomor Induk (NIS)</label>
                                     <input type="text" id="enroll-id" required placeholder="Contoh: 102938">
                                 </div>
                                 <div class="form-group" style="margin-bottom: 0;">
@@ -383,7 +400,7 @@
                                 <input type="text" id="enroll-name" required placeholder="Contoh: Siti Aminah">
                             </div>
                             <button type="submit" id="enroll-btn" class="submit-btn" style="margin-top: 0.5rem;">
-                                <i class="fa-solid fa-camera-retro" style="margin-right: 0.5rem;"></i> Rekam & Daftarkan Biometrik (3x Sampel)
+                                <i class="fa-solid fa-camera-retro" style="margin-right: 0.5rem;"></i> Rekam & Daftarkan (3x Sampel)
                             </button>
                         </form>
                     </div>
@@ -396,14 +413,14 @@
         <div class="panel-sidebar">
             
             <!-- Widget Jam Realtime -->
-            <div class="glass-card" style="padding: 1rem; text-align: center; flex-shrink: 0; background: linear-gradient(to bottom, rgba(15, 23, 42, 0.9), rgba(30, 27, 75, 0.3));">
+            <div class="glass-card" style="padding: 1rem; text-align: center; background: linear-gradient(to bottom, rgba(15, 23, 42, 0.9), rgba(30, 27, 75, 0.3));">
                 <div id="current-time" style="font-size: 1.85rem; font-weight: 900; letter-spacing: -0.025em; color: #a5b4fc; font-family: monospace;">00:00:00</div>
                 <div id="current-date" style="font-size: 0.65rem; color: #94a3b8; margin-top: 0.2rem; text-transform: uppercase; letter-spacing: 0.1em; font-weight: 700;">Rabu, 07 Okt 2026</div>
             </div>
 
             <!-- Log Kehadiran -->
-            <div class="glass-card" style="padding: 1rem; display: flex; flex-direction: column; flex: 1; overflow: hidden;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.06); flex-shrink: 0;">
+            <div class="glass-card" style="padding: 1rem; display: flex; flex-direction: column;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255, 255, 255, 0.06);">
                     <h3 style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #cbd5e1; display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fa-solid fa-clipboard-user" style="color: #818cf8;"></i> Log Kehadiran Hari Ini
                     </h3>
@@ -411,7 +428,7 @@
                 </div>
                 
                 <div class="log-container" id="attendance-log-list">
-                    <div style="text-align: center; padding: 3rem 1rem; color: #64748b; font-size: 0.75rem; font-style: italic;">
+                    <div style="text-align: center; padding: 2rem 1rem; color: #64748b; font-size: 0.75rem; font-style: italic;">
                         Belum ada data kehadiran tercatat hari ini.
                     </div>
                 </div>
@@ -451,6 +468,11 @@
 
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
             document.getElementById(`btn-tab-${tabName}`).className = "nav-btn active";
+
+            // Sesuaikan ulang dimensi canvas saat berpindah tab
+            if (tabName === 'attendance') {
+                setTimeout(setupCanvasDimensions, 100);
+            }
         }
 
         // Keamanan PIN Pendaftaran (PIN: 100)
@@ -547,11 +569,13 @@
             const fa = window.faceapi || window.faceapi?.default;
             const container = document.getElementById('video-container');
             
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
-            
-            const displaySize = { width: container.clientWidth, height: container.clientHeight };
-            fa.matchDimensions(canvas, displaySize);
+            if (container && container.clientWidth > 0) {
+                canvas.width = container.clientWidth;
+                canvas.height = container.clientHeight;
+                
+                const displaySize = { width: container.clientWidth, height: container.clientHeight };
+                fa.matchDimensions(canvas, displaySize);
+            }
         }
 
         window.addEventListener('resize', () => {
@@ -588,7 +612,7 @@
             document.getElementById('attendance-count').innerText = `${attendanceLogs.length} Siswa`;
             
             if (attendanceLogs.length === 0) {
-                container.innerHTML = `<div style="text-align: center; padding: 3rem 1rem; color: #64748b; font-size: 0.75rem; font-style: italic;">Belum ada data kehadiran tercatat hari ini.</div>`;
+                container.innerHTML = `<div style="text-align: center; padding: 2rem 1rem; color: #64748b; font-size: 0.75rem; font-style: italic;">Belum ada data kehadiran tercatat hari ini.</div>`;
                 return;
             }
 
@@ -640,7 +664,7 @@
                 if (!detection) {
                     alert(`Sampel ke-${i} gagal mendeteksi wajah. Pastikan posisi menghadap lurus ke kamera.`);
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = `<i class="fa-solid fa-camera-retro" style="margin-right: 0.5rem;"></i> Rekam & Daftarkan Biometrik (3x Sampel)`;
+                    submitBtn.innerHTML = `<i class="fa-solid fa-camera-retro" style="margin-right: 0.5rem;"></i> Rekam & Daftarkan (3x Sampel)`;
                     return;
                 }
 
@@ -673,7 +697,7 @@
                 alert("Gagal menyimpan ke cloud: " + err.message);
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = `<i class="fa-solid fa-camera-retro" style="margin-right: 0.5rem;"></i> Rekam & Daftarkan Biometrik (3x Sampel)`;
+                submitBtn.innerHTML = `<i class="fa-solid fa-camera-retro" style="margin-right: 0.5rem;"></i> Rekam & Daftarkan (3x Sampel)`;
             }
         }
 
@@ -711,6 +735,10 @@
 
             setInterval(async () => {
                 if (!isModelLoaded || video.paused || video.ended || document.getElementById('tab-attendance').classList.contains('hidden')) return;
+
+                if (!canvas.width || canvas.height === 0) {
+                    setupCanvasDimensions();
+                }
 
                 const displaySize = { width: container.clientWidth, height: container.clientHeight };
                 
