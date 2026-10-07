@@ -37,41 +37,52 @@
   const input = document.getElementById("halaman");
 
   async function muatHalaman(no) {
-    isi.textContent = "Memuat...";
-    try {
-      const url = `https://api.alquran.cloud/v1/page/${no}/editions/quran-uthmani,id.indonesian`;
-      const res = await fetch(url);
-      const json = await res.json();
+  isi.textContent = "Memuat...";
+  try {
+    const base = "https://api.alquran.cloud/v1/page/" + no;
 
-      const arab = json.data[0].ayahs;       // teks Arab
-      const terjemah = json.data[1].ayahs;   // terjemahan Indonesia
+    // dua permintaan dijalankan bersamaan
+    const [resArab, resArti] = await Promise.all([
+      fetch(base + "/quran-uthmani"),
+      fetch(base + "/id.indonesian")
+    ]);
 
-      let html = "";
-      let surahTerakhir = null;
-
-      arab.forEach((a, i) => {
-        // judul surah muncul saat surah berganti
-        if (a.surah.number !== surahTerakhir) {
-          html += `<div class="surah">${a.surah.name} (${a.surah.englishName})</div>`;
-          surahTerakhir = a.surah.number;
-        }
-        html += `
-          <div class="ayat">
-            <div class="arab">${a.text} ﴿${a.numberInSurah}﴾</div>
-            <div class="arti"><span class="nomor">${a.surah.number}:${a.numberInSurah}</span> ${terjemah[i].text}</div>
-          </div>`;
-      });
-
-      isi.innerHTML = html;
-      halaman = no;
-      input.value = no;
-      document.getElementById("prev").disabled = no <= 1;
-      document.getElementById("next").disabled = no >= 604;
-      window.scrollTo(0, 0);
-    } catch (e) {
-      isi.textContent = "Gagal memuat data. Periksa koneksi internet.";
+    if (!resArab.ok || !resArti.ok) {
+      throw new Error("Status: " + resArab.status + " / " + resArti.status);
     }
+
+    const jsonArab = await resArab.json();
+    const jsonArti = await resArti.json();
+
+    const arab = jsonArab.data.ayahs;       // teks Arab
+    const terjemah = jsonArti.data.ayahs;   // terjemahan Indonesia
+
+    let html = "";
+    let surahTerakhir = null;
+
+    arab.forEach((a, i) => {
+      if (a.surah.number !== surahTerakhir) {
+        html += `<div class="surah">${a.surah.name} (${a.surah.englishName})</div>`;
+        surahTerakhir = a.surah.number;
+      }
+      html += `
+        <div class="ayat">
+          <div class="arab">${a.text} ﴿${a.numberInSurah}﴾</div>
+          <div class="arti"><span class="nomor">${a.surah.number}:${a.numberInSurah}</span> ${terjemah[i].text}</div>
+        </div>`;
+    });
+
+    isi.innerHTML = html;
+    halaman = no;
+    input.value = no;
+    document.getElementById("prev").disabled = no <= 1;
+    document.getElementById("next").disabled = no >= 604;
+    window.scrollTo(0, 0);
+  } catch (e) {
+    console.error(e);
+    isi.textContent = "Gagal memuat data. Buka Console (F12) untuk melihat detail error.";
   }
+}
 
   document.getElementById("prev").onclick = () => muatHalaman(halaman - 1);
   document.getElementById("next").onclick = () => muatHalaman(halaman + 1);
