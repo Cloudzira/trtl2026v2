@@ -255,7 +255,6 @@
 
         async function syncWithCloud() {
             if (SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT_URL")) {
-                // Data simulasi lokal agar langsung bisa diuji jika belum memakai Google Apps Script
                 return;
             }
 
@@ -283,15 +282,14 @@
         function buildFaceMatcher(students) {
             const fa = window.faceapi || window.faceapi?.default;
             
-            // Memetakan setiap siswa dengan format label yang unik menggunakan pemisah unik (misal: "::")
             labeledFaceDescriptors = students.map(s => {
                 const descriptors = s.descriptors.map(d => new Float32Array(d));
                 return new fa.LabeledFaceDescriptors(`${s.id}::${s.className}::${s.name}`, descriptors);
             });
 
             if (labeledFaceDescriptors.length > 0) {
-                // Threshold diset ke 0.50 agar pencocokan wajah lebih spesifik dan tidak mudah tertukar
-                faceMatcher = new fa.FaceMatcher(labeledFaceDescriptors, 0.50);
+                // Threshold ketat diset ke 0.42 agar menghindari false positive (wajah asing dianggap mirip)
+                faceMatcher = new fa.FaceMatcher(labeledFaceDescriptors, 0.42);
             } else {
                 faceMatcher = null;
             }
@@ -378,7 +376,7 @@
             }
         }
 
-        // Looping Pemindai Wajah Realtime dengan Pengecekan Unik per Wajah
+        // Looping Pemindai Wajah Realtime dengan Pengecekan Validitas & Distance Threshold
         function startFaceRecognitionLoop() {
             const fa = window.faceapi || window.faceapi?.default;
             const container = document.getElementById('video-container');
@@ -388,7 +386,6 @@
 
                 const displaySize = { width: container.clientWidth, height: container.clientHeight };
                 
-                // Mendeteksi SEMUA wajah yang muncul di depan kamera secara bersamaan
                 const detections = await fa.detectAllFaces(video, new fa.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
                 const resizedDetections = fa.resizeResults(detections, displaySize);
                 
@@ -396,31 +393,33 @@
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
                 if (resizedDetections.length > 0) {
-                    let activeNames = [];
+                    let activeStatusMessages = [];
 
                     resizedDetections.forEach(detection => {
                         let box = detection.detection.box;
                         
-                        // Menyesuaikan koordinat kotak karena efek cermin (mirror) CSS
                         const mirroredX = canvas.width - (box.x + box.width);
                         const adjustedBox = { x: mirroredX, y: box.y, width: box.width, height: box.height };
 
-                        let labelText = "Tidak Dikenali";
-                        let boxColor = "#f43f5e"; // Merah jika 'unknown'
+                        let labelText = "Belum Dikenali";
+                        let boxColor = "#f43f5e"; // Merah (Unknown)
 
+                        // Pastikan faceMatcher ada dan data siswa tidak kosong
                         if (faceMatcher && studentsCache.length > 0) {
                             const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
                             
-                            if (bestMatch.label !== 'unknown') {
-                                // Memecah string label unik berdasarkan pemisah "::"
+                            // FaceMatcher mengembalikan 'unknown' jika jaraknya melebihi threshold,
+                            // tapi kadang library tetap memberi label jika tidak diuji manual. Kita validasi distance secara aman:
+                            // Jika distance < 0.42 (artinya sangat mirip), baru dianggap valid. Jika di atas itu, paksa jadi unknown.
+                            if (bestMatch.label !== 'unknown' && bestMatch.distance < 0.42) {
                                 const parts = bestMatch.label.split('::');
                                 const empId = parts[0];
                                 const empClass = parts[1];
                                 const empName = parts[2];
 
                                 labelText = `${empName} (${empClass})`;
-                                boxColor = "#10b981"; // Hijau jika dikenali
-                                activeNames.push(empName);
+                                boxColor = "#10b981"; // Hijau (Dikenali)
+                                activeStatusMessages.push(empName);
 
                                 const nowTime = new Date().getTime();
                                 if (!lastRecordedTime[empId] || (nowTime - lastRecordedTime[empId] > 120000)) {
@@ -441,7 +440,12 @@
                                     updateAttendanceUI();
                                     sendAttendanceToCloud(empId, empName, empClass);
                                 }
+                            } else {
+                                // Wajah tidak terdaftar / distance terlalu jauh
+                                activeStatusMessages.push("Wajah Tidak Dikenali");
                             }
+                        } else {
+                            activeStatusMessages.push("Database Kosong / Belum Sync");
                         }
 
                         // Menggambar Kotak Tracking (Bounding Box) di Canvas
@@ -453,19 +457,20 @@
                         ctx.fillStyle = boxColor;
                         ctx.fillRect(adjustedBox.x, adjustedBox.y - 28, adjustedBox.width, 28);
 
-                        // Menggambar Teks Nama / Keterangan di Atas Kotak
+                        // Menggambar Teks Keterangan di Atas Kotak
                         ctx.fillStyle = '#ffffff';
-                        ctx.font = 'bold 13px sans-serif';
+                        ctx.font = 'bold 12px sans-serif';
                         ctx.fillText(labelText, adjustedBox.x + 8, adjustedBox.y - 9);
                     });
 
-                    // Memperbarui status teks di bawah kamera berdasarkan wajah yang terdeteksi
-                    if (activeNames.length > 0) {
-                        document.getElementById('recognition-result').innerText = `Terdeteksi: ${activeNames.join(', ')}`;
-                        document.getElementById('match-badge').classList.remove('hidden');
-                    } else {
-                        document.getElementById('recognition-result').innerText = "Wajah tidak terdaftar di database.";
-                        document.getElementById('match-badge').classList.add('hidden');
+                    // Update teks status di bawah kamera
+                    if (activeStatusMessages.length > 0) {
+                        document.getElementById('recognition-result').innerText = `Status: ${activeStatusMessages.join(' | ')}`;
+                        if (activeStatusMessages.some(msg => msg !== "Wajah Tidak Dikenali" && msg !== "Database Kosong / Belum Sync")) {
+                            document.getElementById('match-badge').classList.remove('hidden');
+                        } else {
+                            document.getElementById('match-badge').classList.add('hidden');
+                        }
                     }
                 } else {
                     document.getElementById('recognition-result').innerText = "Memindai wajah di depan kamera...";
