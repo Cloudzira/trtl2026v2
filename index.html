@@ -60,7 +60,7 @@
                 <i class="fa-solid fa-brain text-3xl"></i>
             </div>
             <h2 id="loading-title" class="text-xl font-bold mb-2">Menyiapkan Sistem AI...</h2>
-            <p id="loading-status" class="text-sm text-slate-400 mb-6">Memuat model neural network & data 1.000 siswa.</p>
+            <p id="loading-status" class="text-sm text-slate-400 mb-6">Memuat model neural network & data siswa.</p>
             <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden p-0.5 border border-slate-700">
                 <div id="loading-bar" class="bg-gradient-to-r from-indigo-500 to-violet-500 h-full w-full rounded-full animate-pulse"></div>
             </div>
@@ -88,7 +88,7 @@
                     <!-- Kotak Video & Canvas -->
                     <div class="relative rounded-2xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center border border-slate-800 shadow-inner">
                         <video id="webcam" autoplay muted playsinline class="absolute inset-0 w-full h-full object-cover transform -scale-x-100"></video>
-                        <!-- Canvas tanpa -scale-x-100 agar teks tidak terbalik -->
+                        <!-- Canvas tanpa scale-x agar teks tidak terbalik -->
                         <canvas id="overlay" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
                         
                         <div class="absolute inset-0 border-2 border-dashed border-indigo-500/20 rounded-2xl pointer-events-none flex items-center justify-center">
@@ -141,15 +141,19 @@
 
         </div>
 
-        <!-- Kolom Kanan / Sidebar Info -->
+        <!-- Kolom Kanan / Sidebar Data Kehadiran -->
         <div class="space-y-6">
-            <div class="glass-card rounded-3xl p-6 shadow-2xl">
-                <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center justify-between">
-                    <span>Siswa Terdaftar (Cache)</span>
-                    <span id="registered-count" class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-0.5 rounded-full text-xs">0 Siswa</span>
-                </h3>
-                <div id="registered-users-list" class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-                    <p class="text-xs text-slate-500 italic text-center py-6">Belum ada data siswa. Klik Sync Cloud.</p>
+            <div class="glass-card rounded-3xl p-6 shadow-2xl flex flex-col h-[520px]">
+                <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
+                    <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-user text-indigo-400"></i> Kehadiran Hari Ini
+                    </h3>
+                    <span id="attendance-count" class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-0.5 rounded-full text-xs font-semibold">0 Siswa</span>
+                </div>
+                
+                <!-- Daftar Kehadiran (Urutan: Tanggal, Kelas, ID, Nama, Waktu Kehadiran) -->
+                <div id="attendance-log-list" class="space-y-2.5 overflow-y-auto flex-1 pr-1">
+                    <p class="text-xs text-slate-500 italic text-center py-12">Belum ada data kehadiran tercatat hari ini.</p>
                 </div>
             </div>
 
@@ -166,7 +170,6 @@
     <script>
         // GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykoigdTZqEnWiZz8oD0kMaUckSYZ3pjzak-_4o10x_9TpI6-aivrVjF-T0L7PWLJprzA/exec";
-
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
         
         let video = document.getElementById('webcam');
@@ -175,6 +178,7 @@
         let faceMatcher = null;
         let isModelLoaded = false;
         let studentsCache = [];
+        let attendanceLogs = [];
         let lastRecordedTime = {};
 
         // Jam & Tanggal Realtime
@@ -205,7 +209,6 @@
 
                 isModelLoaded = true;
                 
-                // Ambil data siswa dari Spreadsheet Cloud
                 await syncWithCloud();
                 
                 document.getElementById('loading-modal').classList.add('hidden');
@@ -229,7 +232,6 @@
             }
         }
 
-        // Sinkronisasi data siswa dari Google Spreadsheet
         async function syncWithCloud() {
             if (SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT_URL")) {
                 alert("Harap masukkan URL Web App Google Apps Script pada variabel SCRIPT_URL terlebih dahulu!");
@@ -250,7 +252,6 @@
                 if (result.status === "success") {
                     studentsCache = result.students;
                     buildFaceMatcher(studentsCache);
-                    updateSidebarUI(studentsCache);
                 }
             } catch (err) {
                 console.error("Gagal sinkronisasi cloud:", err);
@@ -271,26 +272,34 @@
             }
         }
 
-        function updateSidebarUI(students) {
-            const listEl = document.getElementById('registered-users-list');
-            document.getElementById('registered-count').innerText = `${students.length} Siswa`;
+        function updateAttendanceUI() {
+            const listEl = document.getElementById('attendance-log-list');
+            document.getElementById('attendance-count').innerText = `${attendanceLogs.length} Siswa`;
             
-            if (students.length === 0) {
-                listEl.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-6">Belum ada siswa terdaftar.</p>`;
+            if (attendanceLogs.length === 0) {
+                listEl.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-12">Belum ada data kehadiran tercatat hari ini.</p>`;
                 return;
             }
 
-            listEl.innerHTML = students.map(s => `
-                <div class="flex items-center justify-between bg-slate-900/60 p-3 rounded-2xl border border-slate-800/80">
-                    <div>
-                        <p class="text-xs font-bold text-slate-200">${s.name}</p>
-                        <p class="text-[10px] text-indigo-400 font-medium">ID: ${s.id} | Kelas: ${s.className}</p>
+            listEl.innerHTML = attendanceLogs.map(log => `
+                <div class="bg-slate-900/60 p-3 rounded-2xl border border-slate-800/80 flex flex-col gap-1">
+                    <div class="flex justify-between items-center text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                        <span><i class="fa-regular fa-calendar mr-1"></i> ${log.date}</span>
+                        <span class="text-indigo-400 font-mono"><i class="fa-regular fa-clock mr-1"></i> ${log.time}</span>
+                    </div>
+                    <div class="flex items-center justify-between mt-1">
+                        <div>
+                            <p class="text-xs font-bold text-slate-200">${log.name}</p>
+                            <p class="text-[10px] text-slate-400">ID: <span class="text-slate-300 font-medium">${log.id}</span></p>
+                        </div>
+                        <span class="px-2.5 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold rounded-xl">
+                            ${log.className}
+                        </span>
                     </div>
                 </div>
             `).join('');
         }
 
-        // Pendaftaran Siswa Baru
         async function handleEnrollment(e) {
             e.preventDefault();
             if (!isModelLoaded) return alert("Model AI belum siap!");
@@ -327,16 +336,12 @@
 
                 await fetch(SCRIPT_URL, {
                     method: "POST",
-                    body: JSON.stringify({
-                        action: "attendance",
-                        id, name, className
-                    })
+                    body: JSON.stringify({ action: "attendance", id, name, className })
                 });
 
                 alert(`Siswa ${name} (${className}) berhasil didaftarkan!`);
                 document.getElementById('enroll-form').reset();
                 buildFaceMatcher(studentsCache);
-                updateSidebarUI(studentsCache);
                 switchTab('attendance');
             } catch (err) {
                 alert("Gagal menyimpan ke cloud: " + err.message);
@@ -373,7 +378,7 @@
                         const labelText = bestMatch.label !== 'unknown' ? bestMatch.label.split('_')[2] : 'Tidak Dikenali';
                         const boxColor = bestMatch.label !== 'unknown' ? '#10b981' : '#f43f5e';
 
-                        // Menggambar kotak dan teks secara manual dengan benar (tidak terbalik)
+                        // Menggambar kotak dan teks secara manual agar tidak terbalik
                         ctx.strokeStyle = boxColor;
                         ctx.lineWidth = 3;
                         ctx.strokeRect(adjustedBox.x, adjustedBox.y, adjustedBox.width, adjustedBox.height);
@@ -397,6 +402,21 @@
                             const nowTime = new Date().getTime();
                             if (!lastRecordedTime[empId] || (nowTime - lastRecordedTime[empId] > 120000)) {
                                 lastRecordedTime[empId] = nowTime;
+                                
+                                const nowObj = new Date();
+                                const dateStr = nowObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
+                                const timeStr = nowObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+                                // Masukkan ke array log kehadiran (urut sesuai permintaan: Tanggal, Kelas, ID, Nama, Waktu)
+                                attendanceLogs.unshift({
+                                    date: dateStr,
+                                    className: empClass,
+                                    id: empId,
+                                    name: empName,
+                                    time: timeStr
+                                });
+
+                                updateAttendanceUI();
                                 sendAttendanceToCloud(empId, empName, empClass);
                             }
                         } else {
