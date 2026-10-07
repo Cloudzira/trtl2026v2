@@ -20,7 +20,7 @@
                 Memuat Halaman Mushaf...
             </div>
 
-            <!-- Menggunakan sumber gambar dari repositori publik yang stabil -->
+            <!-- Menggunakan CDN Quran Foundation standar -->
             <img id="mushaf-page-img" src="" alt="Halaman Al-Quran" class="w-full h-auto object-contain max-h-[75vh]" onload="hideLoader()" onerror="showError()">
         </div>
 
@@ -46,8 +46,8 @@
         function getPageImageUrl(pageNum) {
             // Format angka menjadi 3 digit (contoh: 1 -> 001)
             const paddedNum = String(pageNum).padStart(3, '0');
-            // Menggunakan CDN raw dari github repository quran images standar
-            return `https://raw.githubusercontent.com/fawazahmed0/quran-images/master/images/page${paddedNum}.png`;
+            // URL CDN resmi dari quran.com untuk gambar halaman mushaf standar
+            return `https://verses.quran.com/wbw/page_images/page${paddedNum}.png`;
         }
 
         function loadPage(pageNum) {
