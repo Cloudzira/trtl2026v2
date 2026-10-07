@@ -8,8 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome untuk Ikon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Face-API.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.11/dist/face-api.min.js"></script>
+    <!-- TensorFlow.js & Face-API.js Original yang Stabil -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/4.10.0/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.11/dist/face-api.js"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
 
@@ -17,7 +18,7 @@
     <header class="bg-slate-800 border-b border-slate-700 shadow-md py-4 px-6 flex flex-col md:flex-row justify-between items-center gap-4">
         <div class="flex items-center gap-3">
             <div class="bg-indigo-600 p-2.5 rounded-xl text-white shadow-lg shadow-indigo-500/30">
-                <i class="fa-solid fa-face-recognition text-xl"></i>
+                <i class="fa-solid fa-face-smile text-xl"></i>
             </div>
             <div>
                 <h1 class="text-xl font-bold tracking-tight">FaceCheck AI</h1>
@@ -56,7 +57,7 @@
     <!-- Main Content -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        <!-- Kolom Kiri / Utama (Kamera & Fitur) -->
+        <!-- Kolom Kiri / Utama -->
         <div class="lg:col-span-2 space-y-6">
             
             <!-- Tab 1: Presensi -->
@@ -95,7 +96,7 @@
                 </div>
             </div>
 
-            <!-- Tab 2: Pendaftaran Wajah (Enrollment) -->
+            <!-- Tab 2: Pendaftaran Wajah -->
             <div id="tab-enrollment" class="hidden space-y-6">
                 <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
                     <h2 class="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -148,10 +149,8 @@
 
         </div>
 
-        <!-- Kolom Kanan / Sidebar Informasi -->
+        <!-- Kolom Kanan / Sidebar -->
         <div class="space-y-6">
-            
-            <!-- Daftar Pengguna Terdaftar -->
             <div class="bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
                 <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4 flex items-center justify-between">
                     <span>Database Wajah Lokal</span>
@@ -162,26 +161,25 @@
                 </div>
             </div>
 
-            <!-- Jam & Tanggal Real-time -->
             <div class="bg-gradient-to-br from-indigo-900/40 to-slate-800 border border-indigo-500/20 rounded-2xl p-6 shadow-xl text-center">
                 <div id="current-time" class="text-3xl font-extrabold tracking-tight text-indigo-300">00:00:00</div>
                 <div id="current-date" class="text-xs text-slate-400 mt-1 uppercase tracking-widest font-medium">Senin, 07 Okt 2026</div>
             </div>
-
         </div>
 
     </main>
 
     <!-- Script Aplikasi Logika -->
     <script>
-        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.11/model/';
+        // Menggunakan repo model weights resmi via GitHub/JSDelivr
+        const MODEL_URL = 'https://raw.githubusercontent.com/justadudewhohacks/face-api.js/master/weights';
         
         let video = document.getElementById('webcam');
         let canvas = document.getElementById('overlay');
         let labeledFaceDescriptors = [];
         let faceMatcher = null;
         let isModelLoaded = false;
-        let lastRecordedTime = {}; // Untuk mencegah spam absensi berturut-turut
+        let lastRecordedTime = {};
 
         // Jam & Tanggal Realtime
         setInterval(() => {
@@ -190,7 +188,6 @@
             document.getElementById('current-date').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
         }, 1000);
 
-        // Switch Tab UI
         function switchTab(tabName) {
             ['attendance', 'enrollment', 'history'].forEach(t => {
                 document.getElementById(`tab-${t}`).classList.add('hidden');
@@ -200,16 +197,15 @@
             document.getElementById(`btn-tab-${tabName}`).className = "px-5 py-2 rounded-lg text-sm font-medium transition-all bg-indigo-600 text-white shadow";
         }
 
-        // Inisialisasi Model AI & Kamera
         async function initApp() {
             try {
-                document.getElementById('loading-status').innerText = "Memuat model deteksi wajah (TinyFaceDetector)...";
+                document.getElementById('loading-status').innerText = "Memuat model deteksi wajah...";
                 await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
                 
-                document.getElementById('loading-status').innerText = "Memuat model landmark wajah (FaceLandmarkTinyNet)...";
+                document.getElementById('loading-status').innerText = "Memuat model landmark wajah...";
                 await faceapi.nets.faceLandmarkTinyNet.loadFromUri(MODEL_URL);
                 
-                document.getElementById('loading-status').innerText = "Memuat model pengenalan wajah (FaceRecognitionNet)...";
+                document.getElementById('loading-status').innerText = "Memuat model pengenalan wajah...";
                 await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
 
                 isModelLoaded = true;
@@ -219,11 +215,10 @@
                 startCamera();
             } catch (error) {
                 console.error("Gagal memuat model:", error);
-                document.getElementById('loading-status').innerHTML = `<span class="text-rose-400">Gagal memuat model AI. Periksa koneksi internet Anda dan muat ulang halaman.</span>`;
+                document.getElementById('loading-status').innerHTML = `<span class="text-rose-400">Gagal memuat model AI. Periksa koneksi internet Anda atau pastikan akses internet terbuka.</span>`;
             }
         }
 
-        // Nyalakan Kamera Webcam
         async function startCamera() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false });
@@ -237,7 +232,6 @@
             }
         }
 
-        // Muat Data Wajah Tersimpan di LocalStorage
         function loadStoredFaces() {
             const savedData = localStorage.getItem('face_attendance_users');
             if (savedData) {
@@ -254,7 +248,6 @@
             }
         }
 
-        // Perbarui Tampilan Daftar Pengguna Terdaftar
         function updateRegisteredUI(users) {
             const listEl = document.getElementById('registered-users-list');
             document.getElementById('registered-count').innerText = `${users.length} Terdaftar`;
@@ -275,7 +268,6 @@
             `).join('');
         }
 
-        // Proses Pendaftaran Wajah Baru
         async function handleEnrollment(e) {
             e.preventDefault();
             if (!isModelLoaded) return alert("Model AI belum siap!");
@@ -288,7 +280,6 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Mendeteksi Wajah...`;
 
-            // Deteksi wajah dari video saat ini
             const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
 
             if (!detection) {
@@ -299,8 +290,6 @@
             }
 
             const descriptorArray = Array.from(detection.descriptor);
-            
-            // Ambil data lama atau buat baru
             let savedData = JSON.parse(localStorage.getItem('face_attendance_users') || '[]');
             const existingIndex = savedData.findIndex(u => u.id === id);
             
@@ -322,7 +311,6 @@
             switchTab('attendance');
         }
 
-        // Hapus Pengguna
         function deleteUser(id) {
             if (confirm("Hapus data wajah pengguna ini?")) {
                 let savedData = JSON.parse(localStorage.getItem('face_attendance_users') || '[]');
@@ -332,7 +320,6 @@
             }
         }
 
-        // Loop Deteksi & Pengenalan Wajah Real-time
         video.addEventListener('play', () => {
             const displaySize = { width: video.videoWidth || 640, height: video.videoHeight || 480 };
             faceapi.matchDimensions(canvas, displaySize);
@@ -363,7 +350,6 @@
                                 document.getElementById('recognition-result').innerText = `Halo, ${empName} (${empId})!`;
                                 document.getElementById('match-badge').classList.remove('hidden');
 
-                                // Catat presensi (limit cooldown 1 menit per orang)
                                 const nowTime = new Date().getTime();
                                 if (!lastRecordedTime[empId] || (nowTime - lastRecordedTime[empId] > 60000)) {
                                     lastRecordedTime[empId] = nowTime;
@@ -385,19 +371,17 @@
             }, 500);
         });
 
-        // Catat Presensi ke Log Riwayat
         function recordAttendance(id, name) {
             const history = JSON.parse(localStorage.getItem('face_attendance_logs') || '[]');
             const timestamp = new Date().toLocaleString('id-ID');
             
             history.unshift({ time: timestamp, id, name, status: 'Hadir' });
-            if (history.length > 50) history.pop(); // Batasi 50 riwayat terakhir
+            if (history.length > 50) history.pop();
             
             localStorage.setItem('face_attendance_logs', JSON.stringify(history));
             renderHistory();
         }
 
-        // Tampilkan Riwayat
         function renderHistory() {
             const history = JSON.parse(localStorage.getItem('face_attendance_logs') || '[]');
             const tbody = document.getElementById('history-table-body');
@@ -424,7 +408,6 @@
             }
         }
 
-        // Jalankan saat halaman siap
         window.addEventListener('DOMContentLoaded', () => {
             initApp();
             renderHistory();
