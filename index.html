@@ -3,95 +3,103 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Al-Quran Per Halaman</title>
+  <title>Mushaf Tajwid</title>
   <style>
-    body { font-family: system-ui, sans-serif; background: #f5f1e8; margin: 0; color: #222; }
-    header { background: #0f6b4f; color: #fff; padding: 12px 16px; text-align: center; }
-    main { max-width: 760px; margin: 0 auto; padding: 16px; }
-    .nav { display: flex; gap: 8px; justify-content: center; align-items: center; margin: 12px 0; }
+    body { margin: 0; font-family: system-ui, sans-serif; background: #f5f1e8; transition: background .2s; }
+    body.gelap { background: #0D0F12; color: #fff; }
+    header { background: #0f6b4f; color: #fff; padding: 12px; text-align: center; }
+    .nav { display: flex; gap: 8px; justify-content: center; align-items: center; margin: 12px; flex-wrap: wrap; }
     button { background: #0f6b4f; color: #fff; border: 0; padding: 8px 14px; border-radius: 6px; cursor: pointer; }
     button:disabled { background: #999; }
     input { width: 70px; padding: 7px; text-align: center; }
-    .surah { text-align: center; background: #e3efe9; padding: 8px; border-radius: 6px; margin: 16px 0 8px; font-weight: bold; }
-    .ayat { background: #fff; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
-    .arab { font-family: "Amiri", "Traditional Arabic", serif; font-size: 2rem; line-height: 2.2; direction: rtl; text-align: right; }
-    .nomor { font-size: .9rem; color: #0f6b4f; }
-    .arti { color: #444; margin-top: 6px; }
+    #wrap { text-align: center; padding: 0 8px 24px; }
+    #gambar { max-width: 100%; width: 720px; height: auto; box-shadow: 0 2px 10px rgba(0,0,0,.25); }
+    #info { margin-top: 8px; font-size: .85rem; opacity: .8; }
   </style>
 </head>
 <body>
-  <header><h2>Al-Quran Per Halaman</h2></header>
-  <main>
-    <div class="nav">
-      <button id="prev">« Sebelumnya</button>
-      <input type="number" id="halaman" min="1" max="604" value="1">
-      <button id="pergi">Pergi</button>
-      <button id="next">Berikutnya »</button>
-    </div>
-    <div id="isi">Memuat...</div>
-  </main>
+  <header><h2>Mushaf Tajwid</h2></header>
+
+  <div class="nav">
+    <button id="next">« Berikutnya</button>
+    <input type="number" id="halaman" min="1" max="604" value="1">
+    <button id="pergi">Pergi</button>
+    <button id="prev">Sebelumnya »</button>
+    <button id="tema">🌙 Mode Gelap</button>
+  </div>
+
+  <div id="wrap">
+    <img id="gambar" alt="Halaman mushaf">
+    <div id="info"></div>
+  </div>
 
 <script>
-  let halaman = 1;
-  const isi = document.getElementById("isi");
+  const CDN  = "https://cdn.jsdelivr.net/gh/SakinaDevGroup/mushaf-tajweed-cdn@main";
+  const RAW  = "https://raw.githubusercontent.com/SakinaDevGroup/mushaf-tajweed-cdn/main";
+
+  const img = document.getElementById("gambar");
   const input = document.getElementById("halaman");
+  const info = document.getElementById("info");
 
-  async function muatHalaman(no) {
-  isi.textContent = "Memuat...";
-  try {
-    const base = "https://api.alquran.cloud/v1/page/" + no;
+  let halaman = Number(localStorage.getItem("halaman")) || 1;
+  let tema = localStorage.getItem("tema") || "light";
 
-    // dua permintaan dijalankan bersamaan
-    const [resArab, resArti] = await Promise.all([
-      fetch(base + "/quran-uthmani"),
-      fetch(base + "/id.indonesian")
-    ]);
+  function urlGambar(no, sumber) {
+    return `${sumber}/${tema}/p${no}.png`;
+  }
 
-    if (!resArab.ok || !resArti.ok) {
-      throw new Error("Status: " + resArab.status + " / " + resArti.status);
-    }
-
-    const jsonArab = await resArab.json();
-    const jsonArti = await resArti.json();
-
-    const arab = jsonArab.data.ayahs;       // teks Arab
-    const terjemah = jsonArti.data.ayahs;   // terjemahan Indonesia
-
-    let html = "";
-    let surahTerakhir = null;
-
-    arab.forEach((a, i) => {
-      if (a.surah.number !== surahTerakhir) {
-        html += `<div class="surah">${a.surah.name} (${a.surah.englishName})</div>`;
-        surahTerakhir = a.surah.number;
-      }
-      html += `
-        <div class="ayat">
-          <div class="arab">${a.text} ﴿${a.numberInSurah}﴾</div>
-          <div class="arti"><span class="nomor">${a.surah.number}:${a.numberInSurah}</span> ${terjemah[i].text}</div>
-        </div>`;
-    });
-
-    isi.innerHTML = html;
+  function tampil(no) {
+    if (!(no >= 1 && no <= 604)) return;
     halaman = no;
+
+    img.onerror = () => {                    // kalau CDN gagal, coba alamat cadangan
+      if (!img.dataset.cadangan) {
+        img.dataset.cadangan = "1";
+        img.src = urlGambar(no, RAW);
+      } else {
+        info.textContent = "Gagal memuat gambar. Periksa koneksi internet.";
+      }
+    };
+    delete img.dataset.cadangan;
+    img.src = urlGambar(no, CDN);
+    img.alt = "Mushaf halaman " + no;
+
     input.value = no;
+    info.textContent = "Halaman " + no + " dari 604";
     document.getElementById("prev").disabled = no <= 1;
     document.getElementById("next").disabled = no >= 604;
+    localStorage.setItem("halaman", no);
     window.scrollTo(0, 0);
-  } catch (e) {
-    console.error(e);
-    isi.textContent = "Gagal memuat data. Buka Console (F12) untuk melihat detail error.";
+
+    // muat halaman sebelah lebih dulu supaya terasa cepat
+    [no + 1, no - 1].forEach(n => {
+      if (n >= 1 && n <= 604) new Image().src = urlGambar(n, CDN);
+    });
   }
-}
 
-  document.getElementById("prev").onclick = () => muatHalaman(halaman - 1);
-  document.getElementById("next").onclick = () => muatHalaman(halaman + 1);
-  document.getElementById("pergi").onclick = () => {
-    const n = parseInt(input.value);
-    if (n >= 1 && n <= 604) muatHalaman(n);
+  function terapkanTema() {
+    document.body.classList.toggle("gelap", tema === "dark");
+    document.getElementById("tema").textContent =
+      tema === "dark" ? "☀️ Mode Terang" : "🌙 Mode Gelap";
+  }
+
+  // Mushaf dibaca dari kanan ke kiri, jadi "Berikutnya" ada di sebelah kiri
+  document.getElementById("next").onclick = () => tampil(halaman + 1);
+  document.getElementById("prev").onclick = () => tampil(halaman - 1);
+  document.getElementById("pergi").onclick = () => tampil(parseInt(input.value));
+  document.getElementById("tema").onclick = () => {
+    tema = tema === "dark" ? "light" : "dark";
+    localStorage.setItem("tema", tema);
+    terapkanTema();
+    tampil(halaman);
   };
+  document.addEventListener("keydown", e => {
+    if (e.key === "ArrowLeft") tampil(halaman + 1);
+    if (e.key === "ArrowRight") tampil(halaman - 1);
+  });
 
-  muatHalaman(1);
+  terapkanTema();
+  tampil(halaman);
 </script>
 </body>
 </html>
