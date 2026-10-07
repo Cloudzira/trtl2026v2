@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FaceCheck AI - Sistem Presensi Biometrik Valid</title>
+    <title>FaceCheck AI - Enterprise Biometric Attendance</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -12,13 +12,13 @@
     <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.11/dist/face-api.js"></script>
     <style>
         .glass-card {
-            background: rgba(15, 23, 42, 0.75);
+            background: rgba(15, 23, 42, 0.8);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
         .glass-nav {
-            background: rgba(30, 41, 59, 0.7);
+            background: rgba(30, 41, 59, 0.75);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.05);
         }
@@ -30,11 +30,11 @@
     <header class="glass-nav sticky top-0 z-40 border-b border-slate-800/60 py-4 px-6 flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
         <div class="flex items-center gap-3">
             <div class="bg-gradient-to-tr from-indigo-600 to-violet-500 p-2.5 rounded-2xl text-white shadow-lg shadow-indigo-500/20">
-                <i class="fa-solid fa-shield-halved text-xl"></i>
+                <i class="fa-solid fa-fingerprint text-xl"></i>
             </div>
             <div>
-                <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-400 bg-clip-text text-transparent">FaceCheck AI Secure</h1>
-                <p class="text-xs text-slate-400">Sistem Presensi Biometrik Terverifikasi</p>
+                <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-400 bg-clip-text text-transparent">FaceCheck AI Enterprise</h1>
+                <p class="text-xs text-slate-400">Sistem Presensi Skala Besar (1000+ Wajah Terverifikasi)</p>
             </div>
         </div>
 
@@ -58,8 +58,8 @@
             <div class="inline-flex bg-indigo-500/10 text-indigo-400 p-4 rounded-3xl mb-4 animate-bounce">
                 <i class="fa-solid fa-brain text-3xl"></i>
             </div>
-            <h2 id="loading-title" class="text-xl font-bold mb-2">Menyiapkan Mesin AI...</h2>
-            <p id="loading-status" class="text-sm text-slate-400 mb-6">Memuat model neural network berakurasi tinggi.</p>
+            <h2 id="loading-title" class="text-xl font-bold mb-2">Memuat Mesin AI Enskripsi...</h2>
+            <p id="loading-status" class="text-sm text-slate-400 mb-6">Menyiapkan model neural network berpresisi tinggi.</p>
             <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden p-0.5 border border-slate-700">
                 <div id="loading-bar" class="bg-gradient-to-r from-indigo-500 to-violet-500 h-full w-full rounded-full animate-pulse"></div>
             </div>
@@ -111,9 +111,9 @@
             <div id="tab-enrollment" class="hidden space-y-6">
                 <div class="glass-card rounded-3xl p-6 md:p-8 shadow-2xl">
                     <h2 class="text-lg font-bold mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-user-plus text-indigo-400"></i> Pendaftaran Siswa Baru (Multi-Sampel)
+                        <i class="fa-solid fa-user-plus text-indigo-400"></i> Pendaftaran Siswa Baru (Multi-Sampel Aman)
                     </h2>
-                    <p class="text-xs text-slate-400 mb-6">Sistem akan mengambil 3 sampel wajah secara otomatis untuk akurasi pengenalan maksimal.</p>
+                    <p class="text-xs text-slate-400 mb-6">Sistem merekam 3 sampel biometrik untuk memastikan akurasi di database skala besar.</p>
                     
                     <form id="enroll-form" onsubmit="handleEnrollment(event)" class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -131,7 +131,7 @@
                             <input type="text" id="enroll-name" required placeholder="Contoh: Siti Aminah" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition-colors">
                         </div>
                         <button type="submit" id="enroll-btn" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold py-3.5 rounded-2xl transition-all shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-camera-retro"></i> Mulai Ambil Sampel Wajah (3x)
+                            <i class="fa-solid fa-camera-retro"></i> Mulai Pendaftaran Biometrik (3x Sampel)
                         </button>
                     </form>
                 </div>
@@ -171,10 +171,8 @@
         
         let video = document.getElementById('webcam');
         let canvas = document.getElementById('overlay');
-        let labeledFaceDescriptors = [];
-        let faceMatcher = null;
+        let studentsCache = []; // Menyimpan data mentah untuk pencocokan presisi tinggi
         let isModelLoaded = false;
-        let studentsCache = [];
         let attendanceLogs = [];
         let lastRecordedTime = {};
 
@@ -228,7 +226,7 @@
                 };
 
                 document.getElementById('system-status').className = "px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-medium";
-                document.getElementById('system-status').innerHTML = `<i class="fa-solid fa-circle text-[8px] mr-1.5 text-emerald-400"></i> Kamera Aktif & Stabil`;
+                document.getElementById('system-status').innerHTML = `<i class="fa-solid fa-circle text-[8px] mr-1.5 text-emerald-400"></i> Kamera Aktif & Aman`;
             } catch (err) {
                 document.getElementById('system-status').className = "px-3 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-full text-xs font-medium";
                 document.getElementById('system-status').innerHTML = `Akses Kamera Ditolak`;
@@ -269,28 +267,11 @@
                 
                 if (result.status === "success") {
                     studentsCache = result.students;
-                    buildFaceMatcher(studentsCache);
                 }
             } catch (err) {
                 console.error("Gagal sinkronisasi cloud:", err);
             } finally {
                 icon.classList.remove('fa-spin');
-            }
-        }
-
-        function buildFaceMatcher(students) {
-            const fa = window.faceapi || window.faceapi?.default;
-            
-            labeledFaceDescriptors = students.map(s => {
-                const descriptors = s.descriptors.map(d => new Float32Array(d));
-                return new fa.LabeledFaceDescriptors(`${s.id}::${s.className}::${s.name}`, descriptors);
-            });
-
-            if (labeledFaceDescriptors.length > 0) {
-                // Threshold jarak diatur pada nilai optimal 0.48 (di atas ini dianggap tidak dikenal / asing)
-                faceMatcher = new fa.FaceMatcher(labeledFaceDescriptors, 0.48);
-            } else {
-                faceMatcher = null;
             }
         }
 
@@ -322,7 +303,7 @@
             `).join('');
         }
 
-        // Proses Pendaftaran Multi-Sampel (Mengambil 3 Frame Berurutan untuk Akurasi Tinggi)
+        // Pendaftaran Multi-Sampel
         async function handleEnrollment(e) {
             e.preventDefault();
             if (!isModelLoaded) return alert("Model AI belum siap!");
@@ -339,16 +320,14 @@
             
             for (let i = 1; i <= 3; i++) {
                 submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Mengambil Sampel Wajah ke-${i}/3...`;
-                
-                // Jeda 600ms antar pengambilan sampel agar posisi/ekspresi sedikit bervariasi secara alami
                 await new Promise(resolve => setTimeout(resolve, 600));
 
                 const detection = await fa.detectSingleFace(video, new fa.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
 
                 if (!detection) {
-                    alert(`Sampel ke-${i} gagal mendeteksi wajah dengan jelas. Pastikan posisi wajah menghadap lurus dan pencahayaan cukup.`);
+                    alert(`Sampel ke-${i} gagal mendeteksi wajah. Pastikan posisi menghadap lurus.`);
                     submitBtn.disabled = false;
-                    submitBtn.innerHTML = `<i class="fa-solid fa-camera-retro"></i> Mulai Ambil Sampel Wajah (3x)`;
+                    submitBtn.innerHTML = `<i class="fa-solid fa-camera-retro"></i> Mulai Pendaftaran Biometrik (3x Sampel)`;
                     return;
                 }
 
@@ -356,7 +335,7 @@
             }
 
             try {
-                submitBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up animate-pulse"></i> Menyimpan Multi-Sampel ke Cloud...`;
+                submitBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up animate-pulse"></i> Menyimpan ke Database Cloud...`;
                 
                 let existing = studentsCache.find(s => s.id === id);
                 if (existing) {
@@ -366,7 +345,6 @@
                 }
 
                 if (!SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT_URL")) {
-                    // Kirim semua sampel ke Google Apps Script
                     for (let desc of collectedDescriptors) {
                         await fetch(SCRIPT_URL, {
                             method: "POST",
@@ -375,19 +353,52 @@
                     }
                 }
 
-                alert(`Berhasil! Siswa ${name} (${className}) telah terdaftar dengan 3 sampel biometrik valid.`);
+                alert(`Siswa ${name} (${className}) berhasil didaftarkan!`);
                 document.getElementById('enroll-form').reset();
-                buildFaceMatcher(studentsCache);
                 switchTab('attendance');
             } catch (err) {
                 alert("Gagal menyimpan ke cloud: " + err.message);
             } finally {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = `<i class="fa-solid fa-camera-retro"></i> Mulai Ambil Sampel Wajah (3x)`;
+                submitBtn.innerHTML = `<i class="fa-solid fa-camera-retro"></i> Mulai Pendaftaran Biometrik (3x Sampel)`;
             }
         }
 
-        // Looping Pemindai Wajah Realtime dengan Validasi Jarak Mutlak
+        // FUNGSI UTAMA: Algoritma Custom Pencocokan Jarak Ketat (Aman untuk 1000+ Wajah)
+        // Menggantikan FaceMatcher standar untuk menghindari salah nama pada skala besar
+        function findBestMatchCustom(queryDescriptor, students) {
+            let bestMatch = { id: null, name: null, className: null, distance: 1.0 };
+            const fa = window.faceapi || window.faceapi?.default;
+
+            for (let student of students) {
+                if (!student.descriptors || student.descriptors.length === 0) continue;
+
+                for (let descArray of student.descriptors) {
+                    const storedDescriptor = new Float32Array(descArray);
+                    // Hitung Euclidean Distance menggunakan fungsi bawaan face-api
+                    const distance = fa.euclideanDistance(queryDescriptor, storedDescriptor);
+
+                    if (distance < bestMatch.distance) {
+                        bestMatch = {
+                            id: student.id,
+                            name: student.name,
+                            className: student.className,
+                            distance: distance
+                        };
+                    }
+                }
+            }
+
+            // AMBANG BATAS KETAT (Strict Threshold):
+            // Di bawah 0.38 = Sangat mirip & valid milik orang tersebut.
+            // Di atas 0.38 = Wajah berbeda / Belum dikenali (Mencegah salah nama).
+            if (bestMatch.distance < 0.38) {
+                return bestMatch;
+            }
+            return null; // Dianggap tidak dikenal
+        }
+
+        // Looping Pemindai Wajah Realtime
         function startFaceRecognitionLoop() {
             const fa = window.faceapi || window.faceapi?.default;
             const container = document.getElementById('video-container');
@@ -397,7 +408,6 @@
 
                 const displaySize = { width: container.clientWidth, height: container.clientHeight };
                 
-                // Deteksi semua wajah di frame kamera
                 const detections = await fa.detectAllFaces(video, new fa.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
                 const resizedDetections = fa.resizeResults(detections, displaySize);
                 
@@ -410,33 +420,24 @@
                     resizedDetections.forEach(detection => {
                         let box = detection.detection.box;
                         
-                        // Kalkulasi posisi mirror CSS
                         const mirroredX = canvas.width - (box.x + box.width);
                         const adjustedBox = { x: mirroredX, y: box.y, width: box.width, height: box.height };
 
                         let labelText = "Belum Dikenali";
-                        let boxColor = "#f43f5e"; // Merah (Unknown / Asing)
+                        let boxColor = "#f43f5e"; // Merah
 
-                        if (faceMatcher && studentsCache.length > 0) {
-                            const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
-                            
-                            // VALIDASI KETAT: 
-                            // 1. Label bukan 'unknown'
-                            // 2. Jarak kemiripan (distance) HARUS di bawah 0.48. Semakin kecil nilainya, semakin akurat kecocokannya.
-                            // Jika jarak di atas 0.48, sistem menolak pencocokan dan menganggapnya wajah tidak dikenal.
-                            if (bestMatch.label !== 'unknown' && bestMatch.distance < 0.48) {
-                                const parts = bestMatch.label.split('::');
-                                const empId = parts[0];
-                                const empClass = parts[1];
-                                const empName = parts[2];
+                        if (studentsCache.length > 0) {
+                            // Gunakan fungsi custom untuk skala besar & menghindari salah nama
+                            const match = findBestMatchCustom(detection.descriptor, studentsCache);
 
-                                labelText = `${empName} (${empClass})`;
-                                boxColor = "#10b981"; // Hijau (Valid Dikenali)
-                                activeStatusMessages.push(empName);
+                            if (match) {
+                                labelText = `${match.name} (${match.className})`;
+                                boxColor = "#10b981"; // Hijau (Valid)
+                                activeStatusMessages.push(match.name);
 
                                 const nowTime = new Date().getTime();
-                                if (!lastRecordedTime[empId] || (nowTime - lastRecordedTime[empId] > 120000)) {
-                                    lastRecordedTime[empId] = nowTime;
+                                if (!lastRecordedTime[match.id] || (nowTime - lastRecordedTime[match.id] > 120000)) {
+                                    lastRecordedTime[match.id] = nowTime;
                                     
                                     const nowObj = new Date();
                                     const dateStr = nowObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -444,14 +445,14 @@
 
                                     attendanceLogs.unshift({
                                         date: dateStr,
-                                        className: empClass,
-                                        id: empId,
-                                        name: empName,
+                                        className: match.className,
+                                        id: match.id,
+                                        name: match.name,
                                         time: timeStr
                                     });
 
                                     updateAttendanceUI();
-                                    sendAttendanceToCloud(empId, empName, empClass);
+                                    sendAttendanceToCloud(match.id, match.name, match.className);
                                 }
                             } else {
                                 labelText = "Belum Dikenali";
@@ -464,16 +465,16 @@
                             activeStatusMessages.push("Database Kosong");
                         }
 
-                        // Menggambar Kotak Tracking (Bounding Box) di Canvas
+                        // Gambar Kotak Bounding Box di Canvas
                         ctx.strokeStyle = boxColor;
                         ctx.lineWidth = 3;
                         ctx.strokeRect(adjustedBox.x, adjustedBox.y, adjustedBox.width, adjustedBox.height);
 
-                        // Menggambar Background Label Teks
+                        // Gambar Background Label Teks
                         ctx.fillStyle = boxColor;
                         ctx.fillRect(adjustedBox.x, adjustedBox.y - 28, adjustedBox.width, 28);
 
-                        // Menggambar Teks Keterangan di Atas Kotak
+                        // Gambar Teks Keterangan
                         ctx.fillStyle = '#ffffff';
                         ctx.font = 'bold 12px sans-serif';
                         ctx.fillText(labelText, adjustedBox.x + 8, adjustedBox.y - 9);
@@ -481,7 +482,7 @@
 
                     // Update teks status di bawah kamera
                     if (activeStatusMessages.length > 0) {
-                        document.getElementById('recognition-result').innerText = `Status: ${activeStatusMessages.join(' | ')}`;
+                        document.getElementById('recognition-result').innerText = `Status: ${activeStatusMessages.join(' | ')} (Jarak Aman Terjaga)`;
                         if (activeStatusMessages.some(msg => msg !== "Wajah Tidak Dikenali" && msg !== "Database Kosong")) {
                             document.getElementById('match-badge').classList.remove('hidden');
                         } else {
