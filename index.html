@@ -88,7 +88,6 @@
                     <!-- Kotak Video & Canvas -->
                     <div class="relative rounded-2xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center border border-slate-800 shadow-inner">
                         <video id="webcam" autoplay muted playsinline class="absolute inset-0 w-full h-full object-cover transform -scale-x-100"></video>
-                        <!-- Canvas tanpa scale-x agar teks tidak terbalik -->
                         <canvas id="overlay" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
                         
                         <div class="absolute inset-0 border-2 border-dashed border-indigo-500/20 rounded-2xl pointer-events-none flex items-center justify-center">
@@ -151,7 +150,7 @@
                     <span id="attendance-count" class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-0.5 rounded-full text-xs font-semibold">0 Siswa</span>
                 </div>
                 
-                <!-- Daftar Kehadiran (Urutan: Tanggal, Kelas, ID, Nama, Waktu Kehadiran) -->
+                <!-- Daftar Kehadiran -->
                 <div id="attendance-log-list" class="space-y-2.5 overflow-y-auto flex-1 pr-1">
                     <p class="text-xs text-slate-500 italic text-center py-12">Belum ada data kehadiran tercatat hari ini.</p>
                 </div>
@@ -168,7 +167,6 @@
 
     <!-- Script Logika Aplikasi -->
     <script>
-        // GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
         const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbykoigdTZqEnWiZz8oD0kMaUckSYZ3pjzak-_4o10x_9TpI6-aivrVjF-T0L7PWLJprzA/exec";
         const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
         
@@ -224,6 +222,15 @@
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false });
                 video.srcObject = stream;
+                
+                // Pastikan ukuran canvas disesuaikan setelah video siap memuat metadatanya
+                video.onloadedmetadata = () => {
+                    const fa = window.faceapi || window.faceapi?.default;
+                    const displaySize = { width: video.videoWidth || 640, height: video.videoHeight || 480 };
+                    fa.matchDimensions(canvas, displaySize);
+                    startFaceRecognitionLoop(displaySize);
+                };
+
                 document.getElementById('system-status').className = "px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-medium";
                 document.getElementById('system-status').innerHTML = `<i class="fa-solid fa-circle text-[8px] mr-1.5 text-emerald-400"></i> Kamera Aktif`;
             } catch (err) {
@@ -234,7 +241,6 @@
 
         async function syncWithCloud() {
             if (SCRIPT_URL.includes("YOUR_GOOGLE_APPS_SCRIPT_URL")) {
-                alert("Harap masukkan URL Web App Google Apps Script pada variabel SCRIPT_URL terlebih dahulu!");
                 document.getElementById('loading-modal').classList.add('hidden');
                 return;
             }
@@ -336,7 +342,7 @@
 
                 await fetch(SCRIPT_URL, {
                     method: "POST",
-                    body: JSON.stringify({ action: "attendance", id, name, className })
+                    body: JSON.stringify({ action: "register", id, name, className, descriptor: descriptorArray })
                 });
 
                 alert(`Siswa ${name} (${className}) berhasil didaftarkan!`);
@@ -351,11 +357,9 @@
             }
         }
 
-        // Looping Pemindai Wajah Realtime dengan koreksi Mirror Canvas
-        video.addEventListener('play', () => {
+        // Looping Pemindai Wajah Realtime
+        function startFaceRecognitionLoop(displaySize) {
             const fa = window.faceapi || window.faceapi?.default;
-            const displaySize = { width: video.videoWidth || 640, height: video.videoHeight || 480 };
-            fa.matchDimensions(canvas, displaySize);
 
             setInterval(async () => {
                 if (!isModelLoaded || video.paused || video.ended) return;
@@ -378,7 +382,7 @@
                         const labelText = bestMatch.label !== 'unknown' ? bestMatch.label.split('_')[2] : 'Tidak Dikenali';
                         const boxColor = bestMatch.label !== 'unknown' ? '#10b981' : '#f43f5e';
 
-                        // Menggambar kotak dan teks secara manual agar tidak terbalik
+                        // Menggambar kotak dan teks secara manual
                         ctx.strokeStyle = boxColor;
                         ctx.lineWidth = 3;
                         ctx.strokeRect(adjustedBox.x, adjustedBox.y, adjustedBox.width, adjustedBox.height);
@@ -407,7 +411,6 @@
                                 const dateStr = nowObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
                                 const timeStr = nowObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
-                                // Masukkan ke array log kehadiran (urut sesuai permintaan: Tanggal, Kelas, ID, Nama, Waktu)
                                 attendanceLogs.unshift({
                                     date: dateStr,
                                     className: empClass,
@@ -429,7 +432,7 @@
                     document.getElementById('match-badge').classList.add('hidden');
                 }
             }, 600);
-        });
+        }
 
         async function sendAttendanceToCloud(id, name, className) {
             try {
