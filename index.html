@@ -141,7 +141,15 @@
 
         <!-- Kolom Kanan / Sidebar Data Kehadiran -->
         <div class="space-y-6">
-            <div class="glass-card rounded-3xl p-6 shadow-2xl flex flex-col h-[520px]">
+            
+            <!-- 1. Blok Penanda Waktu & Hari (Diposisikan di Atas) -->
+            <div class="glass-card rounded-3xl p-5 shadow-2xl text-center bg-gradient-to-b from-slate-900/80 to-indigo-950/40">
+                <div id="current-time" class="text-3xl font-black tracking-tight text-indigo-300 font-mono">00:00:00</div>
+                <div id="current-date" class="text-xs text-slate-400 mt-1.5 uppercase tracking-widest font-semibold">Rabu, 07 Okt 2026</div>
+            </div>
+
+            <!-- 2. Blok Tabel Kehadiran -->
+            <div class="glass-card rounded-3xl p-5 shadow-2xl flex flex-col h-[440px]">
                 <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-800">
                     <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
                         <i class="fa-solid fa-clipboard-user text-indigo-400"></i> Kehadiran Hari Ini
@@ -149,17 +157,24 @@
                     <span id="attendance-count" class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-0.5 rounded-full text-xs font-semibold">0 Siswa</span>
                 </div>
                 
-                <!-- Daftar Kehadiran -->
-                <div id="attendance-log-list" class="space-y-2.5 overflow-y-auto flex-1 pr-1">
-                    <p class="text-xs text-slate-500 italic text-center py-12">Belum ada data kehadiran tercatat hari ini.</p>
+                <!-- Tabel Kehadiran -->
+                <div class="overflow-y-auto flex-1 pr-1">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="text-[10px] uppercase tracking-wider text-slate-400 border-b border-slate-800">
+                                <th class="pb-2.5 font-semibold">Kelas / Nama</th>
+                                <th class="pb-2.5 font-semibold text-right">Waktu</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendance-log-list" class="divide-y divide-slate-800/60 text-xs">
+                            <tr>
+                                <td colspan="2" class="text-xs text-slate-500 italic text-center py-12">Belum ada data kehadiran tercatat hari ini.</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
-            <!-- Jam Realtime -->
-            <div class="glass-card rounded-3xl p-6 shadow-2xl text-center bg-gradient-to-b from-slate-900/80 to-indigo-950/40">
-                <div id="current-time" class="text-4xl font-black tracking-tight text-indigo-300 font-mono">00:00:00</div>
-                <div id="current-date" class="text-xs text-slate-400 mt-2 uppercase tracking-widest font-semibold">Rabu, 07 Okt 2026</div>
-            </div>
         </div>
 
     </main>
@@ -171,10 +186,10 @@
         
         let video = document.getElementById('webcam');
         let canvas = document.getElementById('overlay');
-        let studentsCache = []; // Menyimpan data mentah untuk pencocokan presisi tinggi
+        let studentsCache = []; 
         let isModelLoaded = false;
         let attendanceLogs = [];
-        let lastRecordedTime = {};
+        let recordedToday = new Set(); // Menyimpan ID siswa yang sudah presensi hari ini agar tidak berulang
 
         // Jam & Tanggal Realtime
         setInterval(() => {
@@ -276,30 +291,24 @@
         }
 
         function updateAttendanceUI() {
-            const listEl = document.getElementById('attendance-log-list');
+            const tbodyEl = document.getElementById('attendance-log-list');
             document.getElementById('attendance-count').innerText = `${attendanceLogs.length} Siswa`;
             
             if (attendanceLogs.length === 0) {
-                listEl.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-12">Belum ada data kehadiran tercatat hari ini.</p>`;
+                tbodyEl.innerHTML = `<tr><td colspan="2" class="text-xs text-slate-500 italic text-center py-12">Belum ada data kehadiran tercatat hari ini.</td></tr>`;
                 return;
             }
 
-            listEl.innerHTML = attendanceLogs.map(log => `
-                <div class="bg-slate-900/60 p-3 rounded-2xl border border-slate-800/80 flex flex-col gap-1">
-                    <div class="flex justify-between items-center text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
-                        <span><i class="fa-regular fa-calendar mr-1"></i> ${log.date}</span>
-                        <span class="text-indigo-400 font-mono"><i class="fa-regular fa-clock mr-1"></i> ${log.time}</span>
-                    </div>
-                    <div class="flex items-center justify-between mt-1">
-                        <div>
-                            <p class="text-xs font-bold text-slate-200">${log.name}</p>
-                            <p class="text-[10px] text-slate-400">ID: <span class="text-slate-300 font-medium">${log.id}</span></p>
-                        </div>
-                        <span class="px-2.5 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-[10px] font-bold rounded-xl">
-                            ${log.className}
-                        </span>
-                    </div>
-                </div>
+            tbodyEl.innerHTML = attendanceLogs.map(log => `
+                <tr class="hover:bg-slate-950/40 transition-colors">
+                    <td class="py-2.5 pr-2">
+                        <div class="font-bold text-slate-200">${log.name}</div>
+                        <div class="text-[10px] text-slate-400">ID: ${log.id} • <span class="text-indigo-300 font-medium">${log.className}</span></div>
+                    </td>
+                    <td class="py-2.5 pl-2 text-right font-mono text-indigo-400 font-semibold whitespace-nowrap">
+                        ${log.time}
+                    </td>
+                </tr>
             `).join('');
         }
 
@@ -364,8 +373,7 @@
             }
         }
 
-        // FUNGSI UTAMA: Algoritma Custom Pencocokan Jarak Ketat (Aman untuk 1000+ Wajah)
-        // Menggantikan FaceMatcher standar untuk menghindari salah nama pada skala besar
+        // Algoritma Custom Pencocokan Jarak Ketat (Skala 1000+ Wajah)
         function findBestMatchCustom(queryDescriptor, students) {
             let bestMatch = { id: null, name: null, className: null, distance: 1.0 };
             const fa = window.faceapi || window.faceapi?.default;
@@ -375,7 +383,6 @@
 
                 for (let descArray of student.descriptors) {
                     const storedDescriptor = new Float32Array(descArray);
-                    // Hitung Euclidean Distance menggunakan fungsi bawaan face-api
                     const distance = fa.euclideanDistance(queryDescriptor, storedDescriptor);
 
                     if (distance < bestMatch.distance) {
@@ -389,13 +396,11 @@
                 }
             }
 
-            // AMBANG BATAS KETAT (Strict Threshold):
-            // Di bawah 0.38 = Sangat mirip & valid milik orang tersebut.
-            // Di atas 0.38 = Wajah berbeda / Belum dikenali (Mencegah salah nama).
+            // Ambang batas ketat < 0.38
             if (bestMatch.distance < 0.38) {
                 return bestMatch;
             }
-            return null; // Dianggap tidak dikenal
+            return null; 
         }
 
         // Looping Pemindai Wajah Realtime
@@ -427,7 +432,6 @@
                         let boxColor = "#f43f5e"; // Merah
 
                         if (studentsCache.length > 0) {
-                            // Gunakan fungsi custom untuk skala besar & menghindari salah nama
                             const match = findBestMatchCustom(detection.descriptor, studentsCache);
 
                             if (match) {
@@ -435,9 +439,13 @@
                                 boxColor = "#10b981"; // Hijau (Valid)
                                 activeStatusMessages.push(match.name);
 
-                                const nowTime = new Date().getTime();
-                                if (!lastRecordedTime[match.id] || (nowTime - lastRecordedTime[match.id] > 120000)) {
-                                    lastRecordedTime[match.id] = nowTime;
+                                // PENCEGAHAN PRESENSI GANDA HARI INI:
+                                // Jika ID siswa ini belum pernah tercatat hari ini, catat sekali saja.
+                                const todayKey = new Date().toDateString();
+                                const attendanceCheckKey = `${match.id}_${todayKey}`;
+
+                                if (!recordedToday.has(attendanceCheckKey)) {
+                                    recordedToday.add(attendanceCheckKey);
                                     
                                     const nowObj = new Date();
                                     const dateStr = nowObj.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -482,7 +490,7 @@
 
                     // Update teks status di bawah kamera
                     if (activeStatusMessages.length > 0) {
-                        document.getElementById('recognition-result').innerText = `Status: ${activeStatusMessages.join(' | ')} (Jarak Aman Terjaga)`;
+                        document.getElementById('recognition-result').innerText = `Status: ${activeStatusMessages.join(' | ')}`;
                         if (activeStatusMessages.some(msg => msg !== "Wajah Tidak Dikenali" && msg !== "Database Kosong")) {
                             document.getElementById('match-badge').classList.remove('hidden');
                         } else {
