@@ -1,92 +1,86 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mushaf Al-Qur'an Digital</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Al-Quran Per Halaman</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #f5f1e8; margin: 0; color: #222; }
+    header { background: #0f6b4f; color: #fff; padding: 12px 16px; text-align: center; }
+    main { max-width: 760px; margin: 0 auto; padding: 16px; }
+    .nav { display: flex; gap: 8px; justify-content: center; align-items: center; margin: 12px 0; }
+    button { background: #0f6b4f; color: #fff; border: 0; padding: 8px 14px; border-radius: 6px; cursor: pointer; }
+    button:disabled { background: #999; }
+    input { width: 70px; padding: 7px; text-align: center; }
+    .surah { text-align: center; background: #e3efe9; padding: 8px; border-radius: 6px; margin: 16px 0 8px; font-weight: bold; }
+    .ayat { background: #fff; border-radius: 8px; padding: 14px; margin-bottom: 10px; }
+    .arab { font-family: "Amiri", "Traditional Arabic", serif; font-size: 2rem; line-height: 2.2; direction: rtl; text-align: right; }
+    .nomor { font-size: .9rem; color: #0f6b4f; }
+    .arti { color: #444; margin-top: 6px; }
+  </style>
 </head>
-<body class="bg-slate-900 min-h-screen flex flex-col items-center justify-between p-4">
+<body>
+  <header><h2>Al-Quran Per Halaman</h2></header>
+  <main>
+    <div class="nav">
+      <button id="prev">« Sebelumnya</button>
+      <input type="number" id="halaman" min="1" max="604" value="1">
+      <button id="pergi">Pergi</button>
+      <button id="next">Berikutnya »</button>
+    </div>
+    <div id="isi">Memuat...</div>
+  </main>
 
-    <header class="text-center text-white py-2">
-        <h1 class="text-xl font-bold">Mushaf Al-Qur'an Digital</h1>
-        <p class="text-xs text-emerald-300">Navigasi Halaman (1 - 604)</p>
-    </header>
+<script>
+  let halaman = 1;
+  const isi = document.getElementById("isi");
+  const input = document.getElementById("halaman");
 
-    <main class="w-full max-w-md flex flex-col items-center my-auto">
-        <div class="relative w-full bg-amber-50 rounded-lg border-4 border-amber-900 flex justify-center items-center p-2 min-h-[450px]">
-            
-            <div id="image-loader" class="absolute inset-0 flex items-center justify-center bg-amber-50 text-amber-900 text-sm font-medium z-10">
-                Memuat Halaman Mushaf...
-            </div>
+  async function muatHalaman(no) {
+    isi.textContent = "Memuat...";
+    try {
+      const url = `https://api.alquran.cloud/v1/page/${no}/editions/quran-uthmani,id.indonesian`;
+      const res = await fetch(url);
+      const json = await res.json();
 
-            <!-- Menggunakan CDN Quran Foundation standar -->
-            <img id="mushaf-page-img" src="" alt="Halaman Al-Quran" class="w-full h-auto object-contain max-h-[75vh]" onload="hideLoader()" onerror="showError()">
-        </div>
+      const arab = json.data[0].ayahs;       // teks Arab
+      const terjemah = json.data[1].ayahs;   // terjemahan Indonesia
 
-        <div class="flex items-center justify-between w-full mt-4 px-2">
-            <button onclick="prevPage()" id="btn-prev" class="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-30 text-white px-4 py-2 rounded-full text-sm font-semibold">
-                &larr; Sebelumnya
-            </button>
-            
-            <span id="page-indicator" class="text-white text-sm bg-black/40 px-3 py-1 rounded-full">
-                Halaman 1 / 604
-            </span>
+      let html = "";
+      let surahTerakhir = null;
 
-            <button onclick="nextPage()" id="btn-next" class="bg-emerald-700 hover:bg-emerald-600 disabled:opacity-30 text-white px-4 py-2 rounded-full text-sm font-semibold">
-                Selanjutnya &rarr;
-            </button>
-        </div>
-    </main>
-
-    <script>
-        let currentPage = 1;
-        const totalPages = 604;
-
-        function getPageImageUrl(pageNum) {
-            // Format angka menjadi 3 digit (contoh: 1 -> 001)
-            const paddedNum = String(pageNum).padStart(3, '0');
-            // URL CDN resmi dari quran.com untuk gambar halaman mushaf standar
-            return `https://verses.quran.com/wbw/page_images/page${paddedNum}.png`;
+      arab.forEach((a, i) => {
+        // judul surah muncul saat surah berganti
+        if (a.surah.number !== surahTerakhir) {
+          html += `<div class="surah">${a.surah.name} (${a.surah.englishName})</div>`;
+          surahTerakhir = a.surah.number;
         }
+        html += `
+          <div class="ayat">
+            <div class="arab">${a.text} ﴿${a.numberInSurah}﴾</div>
+            <div class="arti"><span class="nomor">${a.surah.number}:${a.numberInSurah}</span> ${terjemah[i].text}</div>
+          </div>`;
+      });
 
-        function loadPage(pageNum) {
-            showLoader();
-            currentPage = pageNum;
-            const imgElement = document.getElementById('mushaf-page-img');
-            imgElement.src = getPageImageUrl(currentPage);
-            
-            document.getElementById('page-indicator').innerText = `Halaman ${currentPage} / ${totalPages}`;
-            document.getElementById('btn-prev').disabled = currentPage <= 1;
-            document.getElementById('btn-next').disabled = currentPage >= totalPages;
-        }
+      isi.innerHTML = html;
+      halaman = no;
+      input.value = no;
+      document.getElementById("prev").disabled = no <= 1;
+      document.getElementById("next").disabled = no >= 604;
+      window.scrollTo(0, 0);
+    } catch (e) {
+      isi.textContent = "Gagal memuat data. Periksa koneksi internet.";
+    }
+  }
 
-        function showLoader() {
-            const loader = document.getElementById('image-loader');
-            loader.style.display = 'flex';
-            loader.innerText = 'Memuat Halaman Mushaf...';
-        }
+  document.getElementById("prev").onclick = () => muatHalaman(halaman - 1);
+  document.getElementById("next").onclick = () => muatHalaman(halaman + 1);
+  document.getElementById("pergi").onclick = () => {
+    const n = parseInt(input.value);
+    if (n >= 1 && n <= 604) muatHalaman(n);
+  };
 
-        function hideLoader() {
-            document.getElementById('image-loader').style.display = 'none';
-        }
-
-        function showError() {
-            const loader = document.getElementById('image-loader');
-            loader.style.display = 'flex';
-            loader.innerText = 'Gagal memuat gambar halaman.';
-        }
-
-        function nextPage() {
-            if (currentPage < totalPages) loadPage(currentPage + 1);
-        }
-
-        function prevPage() {
-            if (currentPage > 1) loadPage(currentPage - 1);
-        }
-
-        // Jalankan saat pertama dibuka
-        loadPage(currentPage);
-    </script>
+  muatHalaman(1);
+</script>
 </body>
 </html>
