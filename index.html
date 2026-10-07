@@ -8,9 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome untuk Ikon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- TensorFlow.js dan Face-API.js UMD Standard -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tfjs/3.21.0/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <!-- TensorFlow.js dan Face-API.js Stabil (Vladmandic Bundle) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tfjs/4.10.0/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.11/dist/face-api.js"></script>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans">
 
@@ -199,18 +199,20 @@
 
         async function initApp() {
             try {
-                if (typeof faceapi === 'undefined') {
-                    throw new Error("Library faceapi belum termuat.");
+                // Mendapatkan namespace faceapi secara aman (global atau default export)
+                const fa = window.faceapi || window.faceapi?.default;
+                if (!fa) {
+                    throw new Error("Library faceapi gagal dimuat.");
                 }
 
                 document.getElementById('loading-status').innerText = "Memuat model deteksi wajah...";
-                await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+                await fa.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
                 
                 document.getElementById('loading-status').innerText = "Memuat model landmark wajah...";
-                await faceapi.nets.faceLandmarkTinyNet.loadFromUri(MODEL_URL);
+                await fa.nets.faceLandmarkTinyNet.loadFromUri(MODEL_URL);
                 
                 document.getElementById('loading-status').innerText = "Memuat model pengenalan wajah...";
-                await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+                await fa.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
 
                 isModelLoaded = true;
                 document.getElementById('loading-modal').classList.add('hidden');
@@ -237,16 +239,17 @@
         }
 
         function loadStoredFaces() {
+            const fa = window.faceapi || window.faceapi?.default;
             const savedData = localStorage.getItem('face_attendance_users');
             if (savedData) {
                 const parsed = JSON.parse(savedData);
                 labeledFaceDescriptors = parsed.map(user => {
                     const descriptors = user.descriptors.map(desc => new Float32Array(desc));
-                    return new faceapi.LabeledFaceDescriptors(user.label, descriptors);
+                    return new fa.LabeledFaceDescriptors(user.label, descriptors);
                 });
 
                 if (labeledFaceDescriptors.length > 0) {
-                    faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.6);
+                    faceMatcher = new fa.FaceMatcher(labeledFaceDescriptors, 0.6);
                 }
                 updateRegisteredUI(parsed);
             }
@@ -276,6 +279,7 @@
             e.preventDefault();
             if (!isModelLoaded) return alert("Model AI belum siap!");
 
+            const fa = window.faceapi || window.faceapi?.default;
             const id = document.getElementById('enroll-id').value.trim();
             const name = document.getElementById('enroll-name').value.trim();
             const label = `${id}_${name}`;
@@ -284,7 +288,7 @@
             submitBtn.disabled = true;
             submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Mendeteksi Wajah...`;
 
-            const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+            const detection = await fa.detectSingleFace(video, new fa.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
 
             if (!detection) {
                 alert("Wajah tidak terdeteksi dengan jelas di kamera. Pastikan posisi wajah menghadap lurus ke depan dengan pencahayaan cukup.");
@@ -325,14 +329,15 @@
         }
 
         video.addEventListener('play', () => {
+            const fa = window.faceapi || window.faceapi?.default;
             const displaySize = { width: video.videoWidth || 640, height: video.videoHeight || 480 };
-            faceapi.matchDimensions(canvas, displaySize);
+            fa.matchDimensions(canvas, displaySize);
 
             setInterval(async () => {
                 if (!isModelLoaded || video.paused || video.ended) return;
 
-                const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
-                const resizedDetections = faceapi.resizeResults(detections, displaySize);
+                const detections = await fa.detectAllFaces(video, new fa.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
+                const resizedDetections = fa.resizeResults(detections, displaySize);
                 
                 const ctx = canvas.getContext('2d');
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -343,7 +348,7 @@
                             const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
                             const box = detection.detection.box;
                             
-                            let drawBox = new faceapi.draw.DrawBox(box, { 
+                            let drawBox = new fa.draw.DrawBox(box, { 
                                 label: bestMatch.label !== 'unknown' ? bestMatch.label.split('_')[1] : 'Tidak Dikenali',
                                 boxColor: bestMatch.label !== 'unknown' ? '#10b981' : '#f43f5e'
                             });
