@@ -3,359 +3,175 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FaceCheck AI - Sistem Presensi Cerdas</title>
+    <title>Aplikasi Absensi Wajah Terpadu</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- TensorFlow.js & Face-API.js (Vladmandic Valid Bundle) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/tfjs/4.10.0/tf.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.11/dist/face-api.js"></script>
-    <style>
-        .glass-card {
-            background: rgba(15, 23, 42, 0.7);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .glass-nav {
-            background: rgba(30, 41, 59, 0.6);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-    </style>
+    <!-- Face-api.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/dist/face-api.js"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-indigo-500 selection:text-white">
+<body class="bg-gray-100 min-h-screen flex flex-col items-center p-4">
 
-    <!-- Header / Navbar -->
-    <header class="glass-nav sticky top-0 z-40 border-b border-slate-800/60 py-4 px-6 flex flex-col md:flex-row justify-between items-center gap-4 shadow-xl">
-        <div class="flex items-center gap-3">
-            <div class="bg-gradient-to-tr from-indigo-600 to-violet-500 p-2.5 rounded-2xl text-white shadow-lg shadow-indigo-500/20">
-                <i class="fa-solid fa-face-recognition text-xl"></i>
+    <!-- Container Utama -->
+    <div class="max-w-3xl w-full bg-white shadow-lg rounded-2xl p-6 mt-4">
+        <h1 class="text-2xl font-bold text-gray-800 text-center mb-6">Sistem Absensi & Database Wajah</h1>
+
+        <!-- Tombol Navigasi Menu -->
+        <div class="flex justify-center gap-4 mb-6">
+            <button onclick="switchTab('scan')" id="btn-scan" class="px-5 py-2.5 rounded-xl font-semibold bg-blue-600 text-white shadow">Menu Absen</button>
+            <button onclick="switchTab('register')" id="btn-register" class="px-5 py-2.5 rounded-xl font-semibold bg-gray-200 text-gray-700">Pendaftaran Wajah</button>
+        </div>
+
+        <!-- MENU 1: ABSENSI -->
+        <div id="tab-scan" class="space-y-4">
+            <div class="relative w-full aspect-video bg-black rounded-xl overflow-hidden flex items-center justify-center">
+                <video id="webcam" autoplay muted playsinline class="absolute inset-0 w-full h-full object-cover -scale-x-100"></video>
+                <canvas id="overlay" class="absolute inset-0 w-full h-full -scale-x-100 pointer-events-none"></canvas>
             </div>
-            <div>
-                <h1 class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-white via-slate-200 to-indigo-400 bg-clip-text text-transparent">FaceCheck AI</h1>
-                <p class="text-xs text-slate-400">Sistem Presensi Biometrik & Spreadsheet Cloud</p>
+            <div class="p-4 rounded-xl bg-gray-50 border border-gray-200 text-center">
+                <p id="recognition-result" class="text-lg font-semibold text-gray-700">Memuat sistem AI...</p>
+                <div id="match-badge" class="mt-2 hidden inline-block bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full">
+                    Absensi Berhasil Tercatat
+                </div>
             </div>
         </div>
 
-        <!-- Tab Navigasi -->
-        <nav class="flex p-1.5 rounded-2xl bg-slate-900/80 border border-slate-800">
-            <button onclick="switchTab('attendance')" id="btn-tab-attendance" class="px-5 py-2 rounded-xl text-sm font-medium transition-all bg-indigo-600 text-white shadow-lg shadow-indigo-600/30">
-                <i class="fa-solid fa-camera mr-2"></i> Presensi
-            </button>
-            <button onclick="switchTab('enrollment')" id="btn-tab-enrollment" class="px-5 py-2 rounded-xl text-sm font-medium transition-all text-slate-400 hover:text-white">
-                <i class="fa-solid fa-user-plus mr-2"></i> Pendaftaran Siswa
-            </button>
-            <button onclick="syncWithCloud()" class="px-4 py-2 rounded-xl text-sm font-medium transition-all text-emerald-400 hover:bg-emerald-500/10" title="Sinkronisasi Data Siswa">
-                <i class="fa-solid fa-sync mr-1" id="sync-icon"></i> Sync Cloud
-            </button>
-        </nav>
-    </header>
-
-    <!-- Modal Loading Model AI & Sync -->
-    <div id="loading-modal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
-        <div class="glass-card rounded-3xl p-8 max-w-md w-full text-center shadow-2xl border border-slate-700/50">
-            <div class="inline-flex bg-indigo-500/10 text-indigo-400 p-4 rounded-3xl mb-4 animate-bounce">
-                <i class="fa-solid fa-brain text-3xl"></i>
+        <!-- MENU 2: PENDAFTARAN WAJAH -->
+        <div id="tab-register" class="hidden space-y-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ID / NIS</label>
+                    <input type="text" id="reg-id" class="w-full border rounded-lg p-2.5" placeholder="Contoh: 101">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+                    <input type="text" id="reg-name" class="w-full border rounded-lg p-2.5" placeholder="Contoh: Budi Santoso">
+                </div>
+                <div class="md:col-span-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Kelas</label>
+                    <input type="text" id="reg-class" class="w-full border rounded-lg p-2.5" placeholder="Contoh: XII IPA 1">
+                </div>
             </div>
-            <h2 id="loading-title" class="text-xl font-bold mb-2">Menyiapkan Sistem AI...</h2>
-            <p id="loading-status" class="text-sm text-slate-400 mb-6">Memuat model neural network & data 1.000 siswa.</p>
-            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden p-0.5 border border-slate-700">
-                <div id="loading-bar" class="bg-gradient-to-r from-indigo-500 to-violet-500 h-full w-full rounded-full animate-pulse"></div>
+            <div class="relative w-full aspect-video bg-black rounded-xl overflow-hidden flex items-center justify-center">
+                <video id="reg-webcam" autoplay muted playsinline class="absolute inset-0 w-full h-full object-cover -scale-x-100"></video>
             </div>
+            <button onclick="captureAndRegister()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow">
+                Ambil Foto & Daftarkan Wajah
+            </button>
+            <p id="reg-status" class="text-center text-sm font-medium text-gray-600"></p>
         </div>
     </div>
 
-    <!-- Main Content -->
-    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        <!-- Kolom Kiri -->
-        <div class="lg:col-span-2 space-y-6">
-            
-            <!-- Tab 1: Presensi -->
-            <div id="tab-attendance" class="space-y-6">
-                <div class="glass-card rounded-3xl p-5 md:p-6 shadow-2xl relative overflow-hidden">
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-base font-semibold flex items-center gap-2">
-                            <i class="fa-solid fa-video text-indigo-400"></i> Kamera Pemindai Kehadiran
-                        </h2>
-                        <span id="system-status" class="px-3 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full text-xs font-medium">
-                            <i class="fa-solid fa-circle text-[8px] mr-1.5 animate-ping"></i> Menyiapkan Kamera...
-                        </span>
-                    </div>
-
-                    <!-- Kotak Video & Canvas -->
-                    <div class="relative rounded-2xl overflow-hidden bg-slate-950 aspect-video flex items-center justify-center border border-slate-800 shadow-inner">
-                        <video id="webcam" autoplay muted playsinline class="absolute inset-0 w-full h-full object-cover transform -scale-x-100"></video>
-                        <canvas id="overlay" class="absolute inset-0 w-full h-full transform -scale-x-100 pointer-events-none"></canvas>
-                        
-                        <div class="absolute inset-0 border-2 border-dashed border-indigo-500/20 rounded-2xl pointer-events-none flex items-center justify-center">
-                            <div class="text-indigo-300/30 text-xs font-semibold tracking-widest uppercase bg-slate-950/60 px-4 py-2 rounded-xl backdrop-blur-sm">Posisikan Wajah Di Sini</div>
-                        </div>
-                    </div>
-
-                    <!-- Status Hasil Verifikasi -->
-                    <div class="mt-4 p-4 rounded-2xl bg-slate-900/60 border border-slate-800/80 flex items-center justify-between">
-                        <div>
-                            <p class="text-[11px] uppercase tracking-wider text-slate-400 font-medium">Status Pengenalan Wajah</p>
-                            <p id="recognition-result" class="text-sm md:text-base font-bold text-slate-200">Memindai wajah di depan kamera...</p>
-                        </div>
-                        <div id="match-badge" class="hidden px-3 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold">
-                            <i class="fa-solid fa-check-circle mr-1"></i> Tercatat
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab 2: Pendaftaran Siswa -->
-            <div id="tab-enrollment" class="hidden space-y-6">
-                <div class="glass-card rounded-3xl p-6 md:p-8 shadow-2xl">
-                    <h2 class="text-lg font-bold mb-2 flex items-center gap-2">
-                        <i class="fa-solid fa-user-plus text-indigo-400"></i> Pendaftaran Siswa Baru
-                    </h2>
-                    <p class="text-xs text-slate-400 mb-6">Daftarkan data siswa beserta sampel wajah biometrik langsung ke database Spreadsheet.</p>
-                    
-                    <form id="enroll-form" onsubmit="handleEnrollment(event)" class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Nomor Induk Siswa (NIS / ID)</label>
-                                <input type="text" id="enroll-id" required placeholder="Contoh: 102938" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition-colors">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Kelas</label>
-                                <input type="text" id="enroll-class" required placeholder="Contoh: X-RPL-1" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition-colors">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Nama Lengkap Siswa</label>
-                            <input type="text" id="enroll-name" required placeholder="Contoh: Siti Aminah" class="w-full bg-slate-900/80 border border-slate-700/80 rounded-2xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition-colors">
-                        </div>
-                        <button type="submit" class="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-semibold py-3.5 rounded-2xl transition-all shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-camera-retro"></i> Ambil Sampel Wajah & Simpan ke Cloud
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- Kolom Kanan / Sidebar Info -->
-        <div class="space-y-6">
-            <div class="glass-card rounded-3xl p-6 shadow-2xl">
-                <h3 class="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 flex items-center justify-between">
-                    <span>Siswa Terdaftar (Cache)</span>
-                    <span id="registered-count" class="bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-0.5 rounded-full text-xs">0 Siswa</span>
-                </h3>
-                <div id="registered-users-list" class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
-                    <p class="text-xs text-slate-500 italic text-center py-6">Belum ada data siswa. Klik Sync Cloud.</p>
-                </div>
-            </div>
-
-            <!-- Jam Realtime -->
-            <div class="glass-card rounded-3xl p-6 shadow-2xl text-center bg-gradient-to-b from-slate-900/80 to-indigo-950/40">
-                <div id="current-time" class="text-4xl font-black tracking-tight text-indigo-300 font-mono">00:00:00</div>
-                <div id="current-date" class="text-xs text-slate-400 mt-2 uppercase tracking-widest font-semibold">Rabu, 07 Okt 2026</div>
-            </div>
-        </div>
-
-    </main>
-
-    <!-- Script Logika Aplikasi -->
+    <!-- Script Utama -->
     <script>
-        // GANTI URL DI BAWAH INI DENGAN URL WEB APP GOOGLE APPS SCRIPT ANDA
-        const SCRIPT_URL = "YOUR_GOOGLE_APPS_SCRIPT_URL";
-
-        const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/';
-        
-        let video = document.getElementById('webcam');
-        let canvas = document.getElementById('overlay');
-        let labeledFaceDescriptors = [];
-        let faceMatcher = null;
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycb.../exec'; // Ganti URL Anda
         let isModelLoaded = false;
-        let studentsCache = [];
+        let faceMatcher = null;
         let lastRecordedTime = {};
 
-        // Jam & Tanggal Realtime
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('current-time').innerText = now.toLocaleTimeString('id-ID');
-            document.getElementById('current-date').innerText = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
-        }, 1000);
-
-        function switchTab(tabName) {
-            ['attendance', 'enrollment'].forEach(t => {
-                document.getElementById(`tab-${t}`).classList.add('hidden');
-                document.getElementById(`btn-tab-${t}`).className = "px-5 py-2 rounded-xl text-sm font-medium transition-all text-slate-400 hover:text-white";
-            });
-            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
-            document.getElementById(`btn-tab-${tabName}`).className = "px-5 py-2 rounded-xl text-sm font-medium transition-all bg-indigo-600 text-white shadow-lg shadow-indigo-600/30";
-        }
-
-        async function initApp() {
-            try {
-                const fa = window.faceapi || window.faceapi?.default;
-                if (!fa) throw new Error("Library FaceAPI gagal dimuat.");
-
-                document.getElementById('loading-status').innerText = "Memuat model AI (TinyFace & Landmarks)...";
-                await fa.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-                await fa.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
-                await fa.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
-
-                isModelLoaded = true;
-                
-                // Ambil data siswa dari Spreadsheet Cloud
-                await syncWithCloud();
-                
-                document.getElementById('loading-modal').classList.add('hidden');
-                startCamera();
-            } catch (error) {
-                console.error("Gagal inisialisasi:", error);
-                document.getElementById('loading-title').innerText = "Gagal Memuat Sistem";
-                document.getElementById('loading-status').innerHTML = `<span class="text-rose-400">${error.message}. Periksa koneksi internet Anda.</span>`;
+        // Switch Tab Menu
+        function switchTab(tab) {
+            if (tab === 'scan') {
+                document.getElementById('tab-scan').classList.remove('hidden');
+                document.getElementById('tab-register').classList.add('hidden');
+                document.getElementById('btn-scan').className = 'px-5 py-2.5 rounded-xl font-semibold bg-blue-600 text-white shadow';
+                document.getElementById('btn-register').className = 'px-5 py-2.5 rounded-xl font-semibold bg-gray-200 text-gray-700';
+            } else {
+                document.getElementById('tab-scan').classList.add('hidden');
+                document.getElementById('tab-register').classList.remove('hidden');
+                document.getElementById('btn-register').className = 'px-5 py-2.5 rounded-xl font-semibold bg-blue-600 text-white shadow';
+                document.getElementById('btn-scan').className = 'px-5 py-2.5 rounded-xl font-semibold bg-gray-200 text-gray-700';
+                startRegCamera();
             }
         }
 
+        // Inisialisasi Kamera Utama (Absen)
         async function startCamera() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 }, audio: false });
-                video.srcObject = stream;
-                document.getElementById('system-status').className = "px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-medium";
-                document.getElementById('system-status').innerHTML = `<i class="fa-solid fa-circle text-[8px] mr-1.5 text-emerald-400"></i> Kamera Aktif`;
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+                document.getElementById('webcam').srcObject = stream;
             } catch (err) {
-                document.getElementById('system-status').className = "px-3 py-1 bg-rose-500/10 text-rose-400 border border-rose-500/20 rounded-full text-xs font-medium";
-                document.getElementById('system-status').innerHTML = `Akses Kamera Ditolak`;
+                console.error("Kamera error:", err);
             }
         }
 
-        // Sinkronisasi data siswa dari Google Spreadsheet
-        async function syncWithCloud() {
-            if (SCRIPT_URL.includes("https://script.google.com/macros/s/AKfycbykoigdTZqEnWiZz8oD0kMaUckSYZ3pjzak-_4o10x_9TpI6-aivrVjF-T0L7PWLJprzA/exec")) {
-                alert("Harap masukkan URL Web App Google Apps Script pada variabel SCRIPT_URL terlebih dahulu!");
-                document.getElementById('loading-modal').classList.add('hidden');
-                return;
-            }
-
-            const icon = document.getElementById('sync-icon');
-            icon.classList.add('fa-spin');
-
+        // Inisialisasi Kamera Pendaftaran
+        async function startRegCamera() {
             try {
-                const response = await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "getStudents" })
-                });
-                const result = await response.json();
-                
-                if (result.status === "success") {
-                    studentsCache = result.students;
-                    buildFaceMatcher(studentsCache);
-                    updateSidebarUI(studentsCache);
-                }
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+                document.getElementById('reg-webcam').srcObject = stream;
             } catch (err) {
-                console.error("Gagal sinkronisasi cloud:", err);
-            } finally {
-                icon.classList.remove('fa-spin');
+                console.error("Kamera pendaftaran error:", err);
             }
         }
 
-        function buildFaceMatcher(students) {
+        // Muat Model AI
+        async function loadModels() {
+            const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/model/';
             const fa = window.faceapi || window.faceapi?.default;
-            labeledFaceDescriptors = students.map(s => {
-                const descriptors = s.descriptors.map(d => new Float32Array(d));
-                return new fa.LabeledFaceDescriptors(`${s.id}_${s.className}_${s.name}`, descriptors);
-            });
 
-            if (labeledFaceDescriptors.length > 0) {
-                faceMatcher = new fa.FaceMatcher(labeledFaceDescriptors, 0.55);
-            }
-        }
-
-        function updateSidebarUI(students) {
-            const listEl = document.getElementById('registered-users-list');
-            document.getElementById('registered-count').innerText = `${students.length} Siswa`;
+            document.getElementById('recognition-result').innerText = "Memuat model AI...";
             
-            if (students.length === 0) {
-                listEl.innerHTML = `<p class="text-xs text-slate-500 italic text-center py-6">Belum ada siswa terdaftar.</p>`;
-                return;
-            }
+            await Promise.all([
+                fa.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+                fa.nets.faceLandmarkNet.loadFromUri(MODEL_URL),
+                fa.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+            ]);
 
-            listEl.innerHTML = students.map(s => `
-                <div class="flex items-center justify-between bg-slate-900/60 p-3 rounded-2xl border border-slate-800/80">
-                    <div>
-                        <p class="text-xs font-bold text-slate-200">${s.name}</p>
-                        <p class="text-[10px] text-indigo-400 font-medium">ID: ${s.id} | Kelas: ${s.className}</p>
-                    </div>
-                </div>
-            `).join('');
+            isModelLoaded = true;
+            document.getElementById('recognition-result').innerText = "Memuat database wajah...";
+            await loadLabeledImages();
+            startCamera();
         }
 
-        // Pendaftaran Siswa Baru
-        async function handleEnrollment(e) {
-            e.preventDefault();
-            if (!isModelLoaded) return alert("Model AI belum siap!");
-
-            const fa = window.faceapi || window.faceapi?.default;
-            const id = document.getElementById('enroll-id').value.trim();
-            const className = document.getElementById('enroll-class').value.trim();
-            const name = document.getElementById('enroll-name').value.trim();
-
-            const submitBtn = e.target.querySelector('button');
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = `<i class="fa-solid fa-spinner animate-spin"></i> Mendeteksi Wajah...`;
-
-            const detection = await fa.detectSingleFace(video, new fa.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-
-            if (!detection) {
-                alert("Wajah tidak terdeteksi dengan jelas di kamera. Pastikan pencahayaan cukup dan menghadap lurus.");
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = `<i class="fa-solid fa-camera-retro"></i> Ambil Sampel Wajah & Simpan ke Cloud`;
-                return;
-            }
-
-            const descriptorArray = Array.from(detection.descriptor);
-
-            // Kirim ke Google Apps Script
+        // Ambil Data Wajah dari Server
+        async function loadLabeledImages() {
             try {
-                submitBtn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up animate-pulse"></i> Menyimpan ke Spreadsheet...`;
+                const response = await fetch(SCRIPT_URL + '?action=getFaces');
+                const data = await response.json();
                 
-                // Simpan lokal sementara
-                let existing = studentsCache.find(s => s.id === id);
-                if (existing) {
-                    existing.descriptors.push(descriptorArray);
-                } else {
-                    studentsCache.push({ id, name, className, descriptors: [descriptorArray] });
+                if (!data || data.length === 0) {
+                    document.getElementById('recognition-result').innerText = "Belum ada data wajah di database.";
+                    return;
                 }
 
-                // Kirim data lengkap ke Google Sheet
-                await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify({
-                        action: "attendance", // Bisa disesuaikan atau dibuat aksi khusus save student
-                        id, name, className
-                    })
+                const fa = window.faceapi || window.faceapi?.default;
+                const labeledDescriptors = data.map(emp => {
+                    const floatDescs = emp.descriptors.map(d => new Float32Array(d));
+                    return new fa.LabeledFaceDescriptors(`${emp.id}_${emp.class}_${emp.name}`, floatDescs);
                 });
 
-                alert(`Siswa ${name} (${className}) berhasil didaftarkan!`);
-                document.getElementById('enroll-form').reset();
-                buildFaceMatcher(studentsCache);
-                updateSidebarUI(studentsCache);
-                switchTab('attendance');
+                faceMatcher = new fa.FaceMatcher(labeledDescriptors, 0.55);
+                document.getElementById('recognition-result').innerText = "Silakan lihat ke kamera.";
             } catch (err) {
-                alert("Gagal menyimpan ke cloud: " + err.message);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = `<i class="fa-solid fa-camera-retro"></i> Ambil Sampel Wajah & Simpan ke Cloud`;
+                document.getElementById('recognition-result').innerText = "Gagal memuat database Google Sheets.";
             }
         }
 
-        // Looping Pemindai Wajah Realtime
+        // Kirim Absensi
+        async function sendAttendanceToCloud(id, name, empClass) {
+            try {
+                await fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, name, class: empClass, status: 'Hadir' })
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Proses Deteksi Realtime (Teks Normal / Tidak Terbalik)
+        const video = document.getElementById('webcam');
+        const canvas = document.getElementById('overlay');
+
         video.addEventListener('play', () => {
             const fa = window.faceapi || window.faceapi?.default;
             const displaySize = { width: video.videoWidth || 640, height: video.videoHeight || 480 };
             fa.matchDimensions(canvas, displaySize);
 
             setInterval(async () => {
-                if (!isModelLoaded || video.paused || video.ended) return;
+                if (!isModelLoaded || video.paused || video.ended || !faceMatcher) return;
 
                 const detections = await fa.detectAllFaces(video, new fa.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors();
                 const resizedDetections = fa.resizeResults(detections, displaySize);
@@ -363,18 +179,39 @@
                 const ctx = canvas.getContext('2d');
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-                if (resizedDetections.length > 0 && faceMatcher) {
+                if (resizedDetections.length > 0) {
                     resizedDetections.forEach(detection => {
                         const bestMatch = faceMatcher.findBestMatch(detection.descriptor);
                         const box = detection.detection.box;
                         
-                        let drawBox = new fa.draw.DrawBox(box, { 
-                            label: bestMatch.label !== 'unknown' ? bestMatch.label.split('_')[2] : 'Tidak Dikenali',
-                            boxColor: bestMatch.label !== 'unknown' ? '#10b981' : '#f43f5e'
-                        });
-                        drawBox.draw(canvas);
+                        const isKnown = bestMatch.label !== 'unknown';
+                        let labelText = 'Tidak Dikenali';
+                        let boxColor = '#f43f5e';
 
-                        if (bestMatch.label !== 'unknown') {
+                        if (isKnown) {
+                            const parts = bestMatch.label.split('_');
+                            labelText = parts[2];
+                            boxColor = '#10b981';
+                        }
+
+                        // Balikkan koordinat khusus teks agar tidak mirror/terbalik
+                        ctx.save();
+                        ctx.scale(-1, 1);
+                        const invertedX = -(box.x + box.width);
+
+                        ctx.strokeStyle = boxColor;
+                        ctx.lineWidth = 3;
+                        ctx.strokeRect(invertedX, box.y, box.width, box.height);
+
+                        ctx.fillStyle = boxColor;
+                        ctx.fillRect(invertedX, box.y - 30, box.width, 30);
+
+                        ctx.fillStyle = '#ffffff';
+                        ctx.font = 'bold 14px sans-serif';
+                        ctx.fillText(labelText, invertedX + 8, box.y - 10);
+                        ctx.restore();
+
+                        if (isKnown) {
                             const parts = bestMatch.label.split('_');
                             const empId = parts[0];
                             const empClass = parts[1];
@@ -384,13 +221,12 @@
                             document.getElementById('match-badge').classList.remove('hidden');
 
                             const nowTime = new Date().getTime();
-                            // Pencegahan absen ganda dalam rentang 2 menit
                             if (!lastRecordedTime[empId] || (nowTime - lastRecordedTime[empId] > 120000)) {
                                 lastRecordedTime[empId] = nowTime;
                                 sendAttendanceToCloud(empId, empName, empClass);
                             }
                         } else {
-                            document.getElementById('recognition-result').innerText = "Wajah tidak terdaftar di database.";
+                            document.getElementById('recognition-result').innerText = "Wajah tidak terdaftar.";
                             document.getElementById('match-badge').classList.add('hidden');
                         }
                     });
@@ -398,23 +234,56 @@
                     document.getElementById('recognition-result').innerText = "Memindai wajah di depan kamera...";
                     document.getElementById('match-badge').classList.add('hidden');
                 }
-            }, 600); // Interval optimal 600ms untuk performa ringan
+            }, 600);
         });
 
-        async function sendAttendanceToCloud(id, name, className) {
+        // Pendaftaran Wajah Baru
+        async function captureAndRegister() {
+            const id = document.getElementById('reg-id').value.trim();
+            const name = document.getElementById('reg-name').value.trim();
+            const empClass = document.getElementById('reg-class').value.trim();
+            const statusEl = document.getElementById('reg-status');
+
+            if (!id || !name || !empClass) {
+                statusEl.innerText = "Harap isi ID, Nama, dan Kelas terlebih dahulu!";
+                statusEl.className = "text-center text-sm font-medium text-red-600";
+                return;
+            }
+
+            statusEl.innerText = "Mendeteksi wajah untuk pendaftaran...";
+            statusEl.className = "text-center text-sm font-medium text-blue-600";
+
+            const regVideo = document.getElementById('reg-webcam');
+            const fa = window.faceapi || window.faceapi?.default;
+            const detection = await fa.detectSingleFace(regVideo, new fa.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+
+            if (!detection) {
+                statusEl.innerText = "Wajah tidak terdeteksi di kamera. Posisikan wajah dengan benar.";
+                statusEl.className = "text-center text-sm font-medium text-red-600";
+                return;
+            }
+
+            const descriptorArray = Array.from(detection.descriptor);
+
             try {
+                statusEl.innerText = "Menyimpan data ke Google Sheets...";
                 await fetch(SCRIPT_URL, {
-                    method: "POST",
-                    body: JSON.stringify({ action: "attendance", id, name, className })
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'register', id, name, class: empClass, descriptor: descriptorArray })
                 });
+
+                statusEl.innerText = "Berhasil! Wajah telah didaftarkan.";
+                statusEl.className = "text-center text-sm font-medium text-green-600";
+                setTimeout(() => { loadLabeledImages(); switchTab('scan'); }, 2000);
             } catch (err) {
-                console.error("Gagal kirim presensi:", err);
+                statusEl.innerText = "Gagal menyimpan data.";
+                statusEl.className = "text-center text-sm font-medium text-red-600";
             }
         }
 
-        window.addEventListener('DOMContentLoaded', () => {
-            initApp();
-        });
+        window.onload = loadModels;
     </script>
 </body>
 </html>
