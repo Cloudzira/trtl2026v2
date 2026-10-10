@@ -1,6 +1,6 @@
 {
-  "name": "FaceCheck AI - Presensi Digital Sekolah",
-  "short_name": "FaceCheck",
+  "name": "SmartFaceKu - Presensi Digital Sekolah",
+  "short_name": "SmartFaceKu",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

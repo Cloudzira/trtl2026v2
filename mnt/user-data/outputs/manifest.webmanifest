@@ -1,6 +1,6 @@
 {
-  "name": "SMAIT FaceCheck AI - Presensi Digital SMAIT Al Irsyad Purwokerto",
-  "short_name": "SMAIT FaceCheck",
+  "name": "SmartFaceKu - Presensi Digital SMAIT Al Irsyad Purwokerto",
+  "short_name": "SmartFaceKu",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
