@@ -1,16 +1,13 @@
-// FaceCheck AI v2 - Service Worker (mode offline otomatis)
-const V = 'facecheck-v2-1-i';
+// SMAIT FaceCheck AI - Service Worker (mode offline otomatis)
+const V = 'smait-facecheck-v2-i';
 const SHELL = [
   './', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png',
   'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.11/dist/face-api.js',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
   'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2',
-  'https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap',
-  'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js',
-  'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js',
-  'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js'
+  'https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap'
 ];
-const CDN = ['cdn.jsdelivr.net', 'cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com', 'www.gstatic.com'];
+const CDN = ['cdn.jsdelivr.net', 'cdnjs.cloudflare.com', 'fonts.googleapis.com', 'fonts.gstatic.com'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(V).then(c => Promise.all(SHELL.map(u => c.add(u).catch(() => {})))).then(() => self.skipWaiting()));
@@ -20,12 +17,12 @@ self.addEventListener('activate', e => {
 });
 self.addEventListener('fetch', e => {
   const r = e.request, u = new URL(r.url);
-  if (r.method !== 'GET') return;
+  if (r.method !== 'GET') return;                       // POST ke Apps Script tidak disentuh
   const same = u.origin === location.origin;
-  if (!same && !CDN.includes(u.host)) return;          // Firestore/Auth (googleapis) tidak disentuh
+  if (!same && !CDN.includes(u.host)) return;
   e.respondWith(caches.open(V).then(async c => {
     const hit = await c.match(r, { ignoreSearch: same });
-    if (hit && !same) return hit;                       // library, model AI, Firebase SDK: cache dulu
+    if (hit && !same) return hit;                       // library & model AI: cache dulu
     try {                                               // halaman aplikasi: terbaru saat online
       const res = await fetch(r);
       if (res && (res.ok || res.type === 'opaque')) c.put(r, res.clone());
