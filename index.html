@@ -100,9 +100,40 @@ body.fs #log-list::-webkit-scrollbar{display:none}
 #tab-attendance .vbox{aspect-ratio:16/9}
 select{width:100%;background:rgba(15,23,42,.9);border:1px solid var(--line);border-radius:.7rem;padding:.6rem .8rem;font-size:.8rem;color:#f8fafc;outline:none}
 option{background:#0f172a}
+body.light{--bg:#eef3f9;--card:rgba(255,255,255,.9);--line:rgba(15,23,42,.12);--mut:#52627a;--pri:#0891b2;--pri2:#0e7490;color:#0f172a;background:radial-gradient(900px 500px at 85% -10%,rgba(14,165,233,.16),transparent),radial-gradient(800px 500px at -10% 110%,rgba(99,102,241,.12),transparent),#eef3f9}
+body.light:before{background:linear-gradient(rgba(14,116,144,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(14,116,144,.06) 1px,transparent 1px);background-size:42px 42px}
+body.light .card{box-shadow:0 8px 28px rgba(15,23,42,.08)}
+body.light header{background:rgba(255,255,255,.94)}
+body.light .brand h1{background:linear-gradient(90deg,#0f172a,#0e7490 60%,#4f46e5);-webkit-background-clip:text;background-clip:text;color:transparent}
+body.light .chip,body.light .tabs,body.light .bar,body.light .drow{background:#fff}
+body.light .chip.ok{color:#047857;border-color:rgba(4,120,87,.35)}
+body.light .chip.bad{color:#b91c1c;border-color:rgba(185,28,28,.35)}
+body.light .chip.warn{color:#a16207;border-color:rgba(161,98,7,.35)}
+body.light .title{color:#1e293b}
+body.light .btn.o{background:rgba(14,116,144,.08);color:#0e7490;border-color:rgba(14,116,144,.25)}
+body.light .btn.g{color:#047857;background:rgba(16,185,129,.1);border-color:rgba(4,120,87,.3)}
+body.light .btn.d{color:#b91c1c;background:rgba(239,68,68,.08);border-color:rgba(185,28,28,.3)}
+body.light input[type=text],body.light input[type=password],body.light input[type=time],body.light input[type=search],body.light select{background:#fff;color:#0f172a;border-color:rgba(15,23,42,.18)}
+body.light option{background:#fff;color:#0f172a}
+body.light .item{background:rgba(241,245,249,.95)}
+body.light .av{background:rgba(14,116,144,.1);border-color:rgba(14,116,144,.3);color:#0e7490}
+body.light .tag.ok{color:#047857;background:rgba(16,185,129,.12)}
+body.light .tag.late{color:#a16207;background:rgba(250,204,21,.22)}
+body.light .lg1 .kls{color:#0e7490}
+body.light .lg1 .jam{color:#a16207}
+body.light .clock{color:#0e7490;text-shadow:none}
+body.light .legend,body.light .chk{color:#334155}
+body.light #tab-attendance{background:rgba(255,255,255,.96)}
+body.light .vbox{border-color:rgba(14,116,144,.45);box-shadow:0 6px 24px rgba(14,116,144,.15)}
+body.light .hint{color:#67e8f9}
+body.light .modal{background:rgba(15,23,42,.45)}
+body.light .t{background:#fff;color:#0f172a}
+body.light .t.ok{color:#047857}body.light .t.warn{color:#a16207}body.light .t.bad{color:#b91c1c}
+body.light .empty{color:#64748b}
 </style>
 </head>
 <body>
+<script>try{if(localStorage.getItem("fc_theme")==="light")document.body.classList.add("light")}catch(e){}</script>
 <div id="toast"></div>
 
 <header>
@@ -120,8 +151,9 @@ option{background:#0f172a}
       <button class="btn active" id="btn-tab-attendance" onclick="switchTab('attendance')"><i class="fa-solid fa-camera"></i> Presensi</button>
       <button class="btn" id="btn-tab-enrollment" onclick="requestEnroll()"><i class="fa-solid fa-user-plus"></i> Admin</button>
     </nav>
-    <button class="btn g" onclick="syncCloud(true)"><i class="fa-solid fa-sync" id="sync-icon"></i> Sync</button>
-    <button class="btn o" onclick="toggleFS()"><i class="fa-solid fa-expand"></i></button>
+    <button class="btn g" onclick="syncCloud(true)" title="Ambil data siswa terbaru dari cloud & kirim antrean yang tertunda"><i class="fa-solid fa-sync" id="sync-icon"></i> Sync</button>
+    <button class="btn o" id="btn-theme" onclick="toggleTheme()" title="Ganti tema terang / gelap"><i class="fa-solid fa-sun" id="theme-icon"></i></button>
+    <button class="btn o" onclick="toggleFS()" title="Layar penuh"><i class="fa-solid fa-expand"></i></button>
   </div>
 </header>
 
@@ -291,6 +323,13 @@ function toggleFS() {
   if (el.requestFullscreen) el.requestFullscreen().catch(() => b.classList.add('fs')); else b.classList.add('fs'); // iPhone: layar penuh semu
 }
 document.addEventListener('fullscreenchange', () => document.body.classList.toggle('fs', !!document.fullscreenElement));
+function setTheme(light) {
+  document.body.classList.toggle('light', light);
+  $('theme-icon').className = light ? 'fa-solid fa-moon' : 'fa-solid fa-sun'; // ikon = tema tujuan
+  try { localStorage.setItem('fc_theme', light ? 'light' : 'dark'); } catch {}
+}
+function toggleTheme() { setTheme(!document.body.classList.contains('light')); }
+setTheme(document.body.classList.contains('light'));
 
 setInterval(() => {
   const now = new Date();
