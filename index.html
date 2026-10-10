@@ -69,8 +69,9 @@ header,main{position:relative;z-index:1}
 .btn.active,.submit{background:linear-gradient(90deg,#0891b2,#6366f1);box-shadow:0 0 14px rgba(34,211,238,.35)}
 .btn.d{border-color:rgba(239,68,68,.35);color:#fca5a5;background:rgba(239,68,68,.1)}
 .vbox{border-color:rgba(34,211,238,.4);box-shadow:0 0 28px rgba(34,211,238,.18)}
-.scan{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#22d3ee,transparent);box-shadow:0 0 14px #22d3ee;animation:sc 3.2s linear infinite;opacity:.6;pointer-events:none}
-@keyframes sc{0%{top:0}100%{top:100%}}
+.scan{position:absolute;left:0;right:0;top:0;height:100%;background:linear-gradient(to bottom,transparent calc(100% - 2px),#22d3ee);animation:sc 3.2s linear infinite;opacity:.55;pointer-events:none;will-change:transform}
+#tab-attendance{backdrop-filter:none;-webkit-backdrop-filter:none;background:rgba(8,16,34,.94)}
+@keyframes sc{0%{transform:translateY(-100%)}100%{transform:translateY(0)}}
 .clock{text-shadow:0 0 16px rgba(34,211,238,.6);color:#67e8f9}
 .legend{display:flex;gap:.9rem;flex-wrap:wrap;font-size:.68rem;margin-bottom:.5rem;color:#cbd5e1}
 .legend i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:.35rem}
@@ -504,9 +505,11 @@ async function processFrame() {
     updateTrack(best, d, W);
   }
   tracks = tracks.filter(t => now - t.seen < CFG.TRACK_TTL);
-  draw(W, H, now); fpsCount++;
+  vw = W; vh = H; fpsCount++;
 }
 
+let vw = 0, vh = 0, lastMsg = '';
+function renderLoop() { if (vw && tab === 'attendance') draw(vw, vh, performance.now()); requestAnimationFrame(renderLoop); }
 function draw(W, H, now) {
   // canvas mengikuti ukuran kotak video (object-fit: cover) agar kotak wajah selalu pas di layout apa pun
   const cw = canvas.clientWidth, ch = canvas.clientHeight;
@@ -514,36 +517,47 @@ function draw(W, H, now) {
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cw, ch);
   const sc = Math.max(cw / W, ch / H); ctx.setTransform(sc, 0, 0, sc, (cw - W * sc) / 2, (ch - H * sc) / 2);
   const k = 1 / sc; // 1 px layar dalam satuan video
-  const msgs = [];
+  const msgs = [], dayOn = dayCfg().on;
   for (const t of tracks) {
-    if (now - t.seen > 200) continue;
+    if (now - t.seen > 700) continue;
+    const d = t.disp || (t.disp = { ...t.box });
+    for (const q of ['x', 'y', 'width', 'height']) d[q] += (t.box[q] - d[q]) * 0.4; // gerak halus, tidak berkedip saat deteksi terlewat
     const tiny = t.box.width < W * CFG.MIN_LIVE;
-    let color = '#22d3ee', label = 'Menganalisis...';
-    if (!db.length) { color = '#ef4444'; label = 'Database kosong'; }
-    else if (t.small) label = 'Dekatkan wajah';
-    else if (t.done) { color = '#22c55e'; const l = logs.find(x => x.id === String(t.identity.id)); label = `✓ ${t.identity.name}${l ? ' • ' + l.time.slice(0, 5) : ''}`; }
-    else if (t.hits >= cn(t)) { color = '#facc15'; const n = t.cs.name; label = !dayCfg().on ? `${n} • hari libur` : S.liveness && tiny ? `${n} • DEKATKAN WAJAH` : S.liveness && !t.blinked ? `${n} • KEDIPKAN MATA` : `${n} • mencatat...`; }
-    else if (t.hits > 0) label = 'Memverifikasi...';
-    else if (t.unk >= 2) { color = '#ef4444'; label = 'Belum terdaftar'; }
-    msgs.push(label);
-    const { x, y, width: w, height: h } = t.box, mx = W - (x + w), l = Math.min(w, h) * 0.22;
+    let color = '#22d3ee', label = 'Menganalisis...', msg = label;
+    if (!db.length) { color = '#ef4444'; label = msg = 'Database kosong'; }
+    else if (t.small) { label = msg = 'Dekatkan wajah'; }
+    else if (t.done) {
+      color = '#22c55e'; label = `${t.identity.name} • ${t.identity.className}`;
+      const lg = logs.find(x => x.id === String(t.identity.id)); msg = `${t.identity.name} • sudah presensi${lg ? ' ' + lg.time.slice(0, 5) : ''}`;
+    } else if (t.hits >= cn(t)) {
+      color = '#facc15'; const n = t.cs.name; label = `${n} • ${t.cs.className}`;
+      msg = !dayOn ? `${n} • hari libur (tidak dicatat)` : S.liveness && tiny ? `${n} • dekatkan wajah untuk verifikasi kedip` : S.liveness && !t.blinked ? `${n} • KEDIPKAN MATA` : `${n} • mencatat...`;
+    }
+    else if (t.hits > 0) { label = msg = 'Memverifikasi...'; }
+    else if (t.unk >= 2) { color = '#ef4444'; label = msg = 'Belum terdaftar'; }
+    msgs.push(msg);
+    const { x, y, width: w, height: h } = d, mx = W - (x + w), cl = Math.min(w, h) * 0.22;
     ctx.strokeStyle = color; ctx.lineWidth = 3 * k; ctx.lineCap = 'round'; ctx.shadowColor = color; ctx.shadowBlur = 10; ctx.beginPath();
-    [[mx, y, 1, 1], [mx + w, y, -1, 1], [mx, y + h, 1, -1], [mx + w, y + h, -1, -1]].forEach(([cx, cy, sx, sy]) => { ctx.moveTo(cx + sx * l, cy); ctx.lineTo(cx, cy); ctx.lineTo(cx, cy + sy * l); });
+    [[mx, y, 1, 1], [mx + w, y, -1, 1], [mx, y + h, 1, -1], [mx + w, y + h, -1, -1]].forEach(([cx, cy, sx, sy]) => { ctx.moveTo(cx + sx * cl, cy); ctx.lineTo(cx, cy); ctx.lineTo(cx, cy + sy * cl); });
     ctx.stroke(); ctx.shadowBlur = 0;
     ctx.font = `bold ${15 * k}px sans-serif`; const tw = ctx.measureText(label).width + 16 * k, lh = 24 * k, ly = y > lh + 6 * k ? y - lh - 4 * k : y + h + 4 * k;
     ctx.fillStyle = color; ctx.fillRect(mx, ly, tw, lh); ctx.fillStyle = color === '#facc15' ? '#111827' : '#fff'; ctx.fillText(label, mx + 8 * k, ly + 17 * k);
-    if (t.hits >= cn(t) && !t.done && S.liveness && !t.blinked && dayCfg().on && !tiny) { // indikator respons mata
+    if (t.hits >= cn(t) && !t.done && S.liveness && !t.blinked && dayOn && !tiny) { // indikator respons mata
       const r = Math.max(0, Math.min(1, ((t.ratio || 1) - 0.5) / 0.5));
       ctx.fillStyle = 'rgba(0,0,0,.55)'; ctx.fillRect(mx, y + h + 6 * k, w, 6 * k); ctx.fillStyle = '#facc15'; ctx.fillRect(mx, y + h + 6 * k, w * r, 6 * k);
     }
   }
-  $('recognition-result').textContent = msgs.length ? msgs.join(' | ') : (dayCfg().on ? 'Memindai wajah...' : 'Hari ini bukan hari presensi');
+  const txt = msgs.length ? msgs.join(' | ') : (dayOn ? 'Memindai wajah...' : 'Hari ini bukan hari presensi');
+  if (txt !== lastMsg) { $('recognition-result').textContent = txt; lastMsg = txt; }
 }
 
 let running = false, fno = 0;
 async function loop() {
-  if (running && tab === 'attendance' && !enrolling && video.readyState >= 2) { try { await processFrame(); } catch (e) { console.error(e); await sleep(200); } }
-  else await sleep(150);
+  const t0 = performance.now();
+  if (running && tab === 'attendance' && !enrolling && video.readyState >= 2) {
+    try { await processFrame(); } catch (e) { console.error(e); await sleep(200); }
+    await sleep(Math.max(0, 50 - (performance.now() - t0))); // sisakan waktu untuk menggambar video
+  } else await sleep(150);
   requestAnimationFrame(loop);
 }
 
@@ -651,7 +665,7 @@ async function init() {
     ready = true;
     const cached = await idb.get('students'); if (cached) buildDb(cached);
     $('loading-modal').classList.add('hidden');
-    startCamera(); loop(); startGPS(); registerSW();
+    startCamera(); loop(); renderLoop(); startGPS(); registerSW();
     syncCloud(); flushQueue(); setInterval(syncCloud, 300000);
   } catch (err) {
     $('loading-title').textContent = 'Gagal Memuat Sistem';
