@@ -77,6 +77,19 @@ header,main{position:relative;z-index:1}
 .days{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:.5rem;margin-top:.6rem}
 .drow{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.4rem .6rem;border:1px solid var(--line);border-radius:.7rem}
 .drow input[type=time]{width:110px;padding:.3rem .5rem}
+
+body.fs{height:100vh;overflow:hidden}
+body.fs header{padding:.35rem .8rem}
+body.fs .brand p{display:none}
+body.fs main:not(.wide){min-height:0;max-width:none;padding:.6rem;gap:.6rem;grid-template-columns:1fr 330px;grid-template-rows:minmax(0,1fr)}
+body.fs main:not(.wide)>div{min-height:0}
+body.fs #tab-attendance{height:100%;display:flex;flex-direction:column;padding:.7rem}
+body.fs #tab-attendance .vbox{flex:1;min-height:0;aspect-ratio:auto;max-height:none}
+body.fs #side{min-height:0;height:100%}
+body.fs #side>.card:last-child{flex:1;min-height:0;display:flex;flex-direction:column}
+body.fs #log-list{flex:1;min-height:0;max-height:none;scrollbar-width:none}
+body.fs #log-list::-webkit-scrollbar{display:none}
+@media(max-width:1000px){body.fs main:not(.wide){grid-template-columns:1fr}body.fs #side{display:none!important}}
 </style>
 </head>
 <body>
@@ -193,7 +206,7 @@ header,main{position:relative;z-index:1}
       <div class="row" style="justify-content:space-between;margin-bottom:.6rem;padding-bottom:.5rem;border-bottom:1px solid var(--line)">
         <div class="title"><i class="fa-solid fa-clipboard-user" style="color:#818cf8"></i> Kehadiran Hari Ini</div>
         <div class="row"><span class="tag" id="attendance-count">0</span>
-        <button class="btn o" style="padding:.25rem .5rem" onclick="exportCSV()" title="Unduh CSV"><i class="fa-solid fa-download"></i></button></div>
+        <button class="btn o" style="padding:.25rem .5rem" onclick="exportCSV()" title="Unduh CSV terurut"><i class="fa-solid fa-download"></i></button><button class="btn o" style="padding:.25rem .5rem" onclick="openMonth()" title="Buka spreadsheet bulan ini"><i class="fa-solid fa-table"></i></button></div>
       </div>
       <div class="list" id="log-list"></div>
     </div>
@@ -202,7 +215,7 @@ header,main{position:relative;z-index:1}
 
 <script>
 const CFG = {
-  SCRIPT_URL: "https://script.google.com/macros/s/AKfycby2vwUPAtTAkgivJQNy2Ew4jnVR7pu1SL_Te2A--AKfqjwqVT19dppyOxcSELJTySgK/exec",
+  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbwo7Q72GVtRPWSTA2hED7_UBNnEbZVpU8dm4666l1tPf6-ANXtAGP8gPnva-QxkgGoF6Q/exec",
   MODEL_URL: "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/",
   ADMIN_PIN: "100",
   THRESHOLD: 0.47,   // makin kecil makin ketat (0.4 ketat, 0.55 longgar)
@@ -255,7 +268,13 @@ function speak(t) {
   const u = new SpeechSynthesisUtterance(t); u.lang = 'id-ID'; speechSynthesis.cancel(); speechSynthesis.speak(u);
 }
 function setStatus(txt, cls) { const s = $('system-status'); s.textContent = txt; s.className = 'chip ' + cls; }
-function toggleFS() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen().catch(e => toast(e.message, 'bad')); }
+function toggleFS() {
+  const b = document.body, el = document.documentElement;
+  if (document.fullscreenElement) return document.exitFullscreen();
+  if (b.classList.contains('fs')) return b.classList.remove('fs');
+  if (el.requestFullscreen) el.requestFullscreen().catch(() => b.classList.add('fs')); else b.classList.add('fs'); // iPhone: layar penuh semu
+}
+document.addEventListener('fullscreenchange', () => document.body.classList.toggle('fs', !!document.fullscreenElement));
 
 setInterval(() => {
   const now = new Date();
@@ -391,10 +410,20 @@ function resetToday() {
 }
 function exportCSV() {
   if (!logs.length) return toast('Belum ada data', 'warn');
-  const rows = [['Tanggal', 'NIS', 'Nama', 'Kelas', 'Jam', 'Status', 'Lat', 'Lng'], ...logs.slice().reverse().map(l => [day, l.id, l.name, l.className, l.time, l.status, l.lat ?? '', l.lng ?? ''])];
+  const cmp = (a, b) => String(a).localeCompare(String(b), 'id', { numeric: true });
+  const sorted = logs.slice().sort((a, b) => cmp(a.className, b.className) || cmp(a.id, b.id) || cmp(a.name, b.name) || cmp(a.time, b.time));
+  const rows = [['Tanggal', 'Kelas', 'NIS', 'Nama', 'Jam', 'Status', 'Lat', 'Lng'], ...sorted.map(l => [day, l.className, l.id, l.name, l.time, l.status, l.lat ?? '', l.lng ?? ''])];
   const csv = '\ufeff' + rows.map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',')).join('\n');
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
   a.download = `presensi_${day}.csv`; a.click(); URL.revokeObjectURL(a.href);
+}
+async function openMonth() {
+  if (!navigator.onLine) return toast('Butuh koneksi internet', 'warn');
+  try {
+    const r = await fetch(CFG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'monthLink', month: day.slice(0, 7) }) });
+    const j = await r.json();
+    if (j.url) window.open(j.url, '_blank'); else toast(j.message || 'Belum ada data bulan ini', 'warn');
+  } catch { toast('Gagal menghubungi server', 'bad'); }
 }
 
 /* ---------- Tracking + pengenalan ---------- */
@@ -429,7 +458,6 @@ function updateTrack(t, d, W) {
 
 async function processFrame() {
   const W = video.videoWidth, H = video.videoHeight; if (!W) return;
-  if (canvas.width !== W) { canvas.width = W; canvas.height = H; }
   const want = db.length > 0 && (frame++ % CFG.DESC_EVERY === 0 || !tracks.length || tracks.some(t => !t.done && t.hits < CFG.CONFIRM)); // saat menunggu kedip, tanpa descriptor agar FPS tinggi
   const task = fa.detectAllFaces(video, detOpts).withFaceLandmarks();
   const res = want ? await task.withFaceDescriptors() : await task;
@@ -447,7 +475,11 @@ async function processFrame() {
 }
 
 function draw(W, H, now) {
-  ctx.clearRect(0, 0, W, H);
+  // canvas mengikuti ukuran kotak video (object-fit: cover) agar kotak wajah selalu pas di layout apa pun
+  const cw = canvas.clientWidth, ch = canvas.clientHeight;
+  if (canvas.width !== cw || canvas.height !== ch) { canvas.width = cw; canvas.height = ch; }
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cw, ch);
+  const sc = Math.max(cw / W, ch / H); ctx.setTransform(sc, 0, 0, sc, (cw - W * sc) / 2, (ch - H * sc) / 2);
   const msgs = [];
   for (const t of tracks) {
     if (now - t.seen > 200) continue;
