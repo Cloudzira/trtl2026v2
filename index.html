@@ -78,7 +78,8 @@ header,main{position:relative;z-index:1}
 .drow{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.4rem .6rem;border:1px solid var(--line);border-radius:.7rem}
 .drow input[type=time]{width:110px;padding:.3rem .5rem}
 
-body.fs{height:100vh;overflow:hidden}
+body.fs:not(.adm){height:100vh;overflow:hidden}
+body.fs.adm{overflow-y:auto}
 body.fs header{padding:.35rem .8rem}
 body.fs .brand p{display:none}
 body.fs main:not(.wide){min-height:0;max-width:none;padding:.6rem;gap:.6rem;grid-template-columns:1fr 330px;grid-template-rows:minmax(0,1fr)}
@@ -215,7 +216,7 @@ body.fs #log-list::-webkit-scrollbar{display:none}
 
 <script>
 const CFG = {
-  SCRIPT_URL: "https://script.google.com/macros/s/AKfycby2vwUPAtTAkgivJQNy2Ew4jnVR7pu1SL_Te2A--AKfqjwqVT19dppyOxcSELJTySgK/exec",
+  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbwo7Q72GVtRPWSTA2hED7_UBNnEbZVpU8dm4666l1tPf6-ANXtAGP8gPnva-QxkgGoF6Q/exec",
   MODEL_URL: "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/",
   ADMIN_PIN: "100",
   THRESHOLD: 0.47,   // makin kecil makin ketat (0.4 ketat, 0.55 longgar)
@@ -291,7 +292,7 @@ function switchTab(t) {
   $('tab-attendance').classList.toggle('hidden', !att);
   const en = $('tab-enrollment'); en.classList.toggle('hidden', att); en.style.display = att ? 'none' : 'flex';
   $('side').style.display = att ? 'flex' : 'none';
-  $('main').classList.toggle('wide', !att);
+  $('main').classList.toggle('wide', !att); document.body.classList.toggle('adm', !att);
   $('btn-tab-attendance').className = 'btn' + (att ? ' active' : '');
   $('btn-tab-enrollment').className = 'btn' + (att ? '' : ' active');
   if (!att) { renderStudents(); renderDays(); $('set-live').checked = S.liveness; $('set-voice').checked = S.voice; }
