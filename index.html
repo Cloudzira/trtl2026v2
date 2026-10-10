@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SMAIT FaceCheck AI - Presensi Digital SMAIT Al Irsyad Purwokerto</title>
+<title>FaceCheck AI - Presensi Digital Sekolah</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&display=swap">
 <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.11/dist/face-api.js"></script>
@@ -130,16 +130,43 @@ body.light .modal{background:rgba(15,23,42,.45)}
 body.light .t{background:#fff;color:#0f172a}
 body.light .t.ok{color:#047857}body.light .t.warn{color:#a16207}body.light .t.bad{color:#b91c1c}
 body.light .empty{color:#64748b}
+.screen{position:relative;z-index:1;flex:1;display:flex;align-items:center;justify-content:center;padding:1rem}
+.box{width:100%;max-width:400px}
+body.noapp header,body.noapp main{display:none!important}
+input[type=email],input[type=month]{width:100%;background:rgba(15,23,42,.9);border:1px solid var(--line);border-radius:.7rem;padding:.6rem .8rem;font-size:.8rem;color:#f8fafc;outline:none}
+body.light input[type=email],body.light input[type=month]{background:#fff;color:#0f172a;border-color:rgba(15,23,42,.18)}
 </style>
 </head>
-<body>
+<body class="noapp">
 <script>try{if(localStorage.getItem("fc_theme")==="light")document.body.classList.add("light")}catch(e){}</script>
 <div id="toast"></div>
 
+<div id="v-auth" class="screen hidden"><div class="card box">
+  <div class="brand" style="justify-content:center;margin-bottom:1rem"><div class="logo"><i class="fa-solid fa-user-check"></i></div><div><h1 class="fx">FaceCheck AI</h1><p>Presensi Digital Sekolah</p></div></div>
+  <div class="tabs" style="margin-bottom:.9rem"><button class="btn active" id="t-login" style="flex:1;justify-content:center" onclick="authMode('login')">Masuk</button><button class="btn" id="t-reg" style="flex:1;justify-content:center" onclick="authMode('reg')">Daftar Sekolah</button></div>
+  <form onsubmit="doAuth(event)" style="display:flex;flex-direction:column;gap:.7rem">
+    <div><label>Email</label><input type="email" id="a-email" required autocomplete="username"></div>
+    <div><label>Kata sandi</label><input type="password" id="a-pass" required minlength="6" autocomplete="current-password"></div>
+    <div id="a-pass2-box" class="hidden"><label>Ulangi kata sandi</label><input type="password" id="a-pass2" minlength="6" autocomplete="new-password"></div>
+    <button class="submit" id="a-btn">Masuk</button>
+    <button type="button" class="btn" style="justify-content:center" onclick="resetPass()">Lupa kata sandi?</button>
+  </form></div></div>
+<div id="v-verify" class="screen hidden"><div class="card box" style="text-align:center"><i class="fa-solid fa-envelope-circle-check" style="font-size:2rem;color:#22d3ee"></i><h3 style="margin:.6rem 0">Verifikasi email</h3><p class="sub" id="verify-msg" style="margin-bottom:1rem"></p>
+  <div class="row" style="justify-content:center"><button class="btn o" onclick="resendVerify()">Kirim ulang</button><button class="btn active" onclick="checkVerified()">Saya sudah verifikasi</button><button class="btn d" onclick="doLogout()">Keluar</button></div></div></div>
+<div id="v-school" class="screen hidden"><div class="card box"><h3 style="margin-bottom:.3rem">Data Sekolah</h3><p class="sub" style="margin-bottom:.8rem">Lengkapi data sekolah. Pengajuan akan ditinjau master admin.</p>
+  <form onsubmit="saveSchool(event)" style="display:flex;flex-direction:column;gap:.7rem">
+    <div><label>Nama sekolah</label><input type="text" id="s-name" required placeholder="SMAIT Al Irsyad Purwokerto"></div>
+    <div><label>NPSN</label><input type="text" id="s-npsn" required></div>
+    <div><label>Kota / Kabupaten</label><input type="text" id="s-city" required></div>
+    <button class="submit">Kirim pengajuan</button><button type="button" class="btn d" style="justify-content:center" onclick="doLogout()">Keluar</button></form></div></div>
+<div id="v-pending" class="screen hidden"><div class="card box" style="text-align:center"><i id="pend-icon" class="fa-solid fa-hourglass-half" style="font-size:2rem;color:#facc15"></i><h3 id="pend-title" style="margin:.6rem 0"></h3><p class="sub" id="pend-msg" style="margin-bottom:1rem"></p><button class="btn d" onclick="doLogout()">Keluar</button></div></div>
+<div id="v-master" class="screen hidden" style="align-items:flex-start"><div class="card" style="width:100%;max-width:900px">
+  <div class="row" style="justify-content:space-between"><div class="title"><i class="fa-solid fa-user-shield" style="color:#818cf8"></i> Master Admin - Persetujuan Sekolah</div><button class="btn o" onclick="doLogout()">Keluar</button></div>
+  <div class="list" id="school-list" style="max-height:none;margin-top:.8rem"></div></div></div>
 <header>
   <div class="brand">
     <div class="logo"><i class="fa-solid fa-user-check"></i></div>
-    <div><h1 class="fx">SMAIT FaceCheck AI</h1><p>Presensi Digital SMAIT Al Irsyad Purwokerto</p></div>
+    <div><h1 class="fx">FaceCheck AI</h1><p id="brand-sub">Presensi Digital Sekolah</p></div>
   </div>
   <div class="row">
     <span class="chip" id="chip-net">Online</span>
@@ -151,7 +178,7 @@ body.light .empty{color:#64748b}
       <button class="btn active" id="btn-tab-attendance" onclick="switchTab('attendance')"><i class="fa-solid fa-camera"></i> Presensi</button>
       <button class="btn" id="btn-tab-enrollment" onclick="requestEnroll()"><i class="fa-solid fa-user-plus"></i> Admin</button>
     </nav>
-    <button class="btn g" onclick="syncCloud(true)" title="Ambil data siswa terbaru dari cloud & kirim antrean yang tertunda"><i class="fa-solid fa-sync" id="sync-icon"></i> Sync</button>
+    <button class="btn g" onclick="syncCloud(true)" title="Pastikan semua data sudah terkirim ke cloud"><i class="fa-solid fa-sync" id="sync-icon"></i> Sync</button>
     <button class="btn o" id="btn-theme" onclick="toggleTheme()" title="Ganti tema terang / gelap"><i class="fa-solid fa-sun" id="theme-icon"></i></button>
     <button class="btn o" onclick="toggleFS()" title="Layar penuh"><i class="fa-solid fa-expand"></i></button>
   </div>
@@ -159,7 +186,7 @@ body.light .empty{color:#64748b}
 
 <div id="pin-modal" class="modal hidden"><div class="card" style="max-width:290px;width:100%;text-align:center">
   <h3 style="font-size:.9rem;margin-bottom:.3rem"><i class="fa-solid fa-lock"></i> Akses Admin</h3>
-  <p class="sub" style="margin-bottom:.8rem">Masukkan PIN administrator.</p>
+  <p class="sub" style="margin-bottom:.8rem">Masukkan PIN admin sekolah. <a href="#" onclick="forgotPin();return false" style="color:var(--pri2)">Lupa PIN?</a></p>
   <form onsubmit="verifyPin(event)" style="display:flex;flex-direction:column;gap:.7rem">
     <input type="password" id="pin-input" maxlength="8" placeholder="PIN" style="text-align:center;font-size:1.1rem;letter-spacing:.2em">
     <div class="row"><button type="button" class="btn o" style="flex:1;justify-content:center" onclick="$('pin-modal').classList.add('hidden')">Batal</button>
@@ -179,8 +206,8 @@ body.light .empty{color:#64748b}
 
 <div id="loading-modal" class="modal"><div class="card" style="max-width:320px;width:100%;text-align:center;padding:2rem">
   <i class="fa-solid fa-brain" style="font-size:2rem;color:#818cf8;margin-bottom:.8rem"></i>
-  <h2 id="loading-title" style="font-size:1rem;margin-bottom:.3rem">Memuat Mesin AI...</h2>
-  <p id="loading-status" class="sub">Menyiapkan model deteksi wajah.</p></div></div>
+  <h2 id="loading-title" style="font-size:1rem;margin-bottom:.3rem">Memuat...</h2>
+  <p id="loading-status" class="sub">Menghubungkan ke server...</p></div></div>
 
 <main id="main">
   <div style="display:flex;flex-direction:column;gap:1rem;min-width:0">
@@ -228,6 +255,9 @@ body.light .empty{color:#64748b}
         <div style="max-width:320px;margin-top:.8rem"><label>Jarak deteksi wajah</label><select id="set-range"><option value="near">Dekat (≤ 0,8 m) • tercepat</option><option value="mid">Sedang (± 1,5 m) • disarankan</option><option value="far">Jauh (± 2 m) • lebih berat</option></select></div>
         <label class="chk"><input type="checkbox" id="set-live"> Anti-foto: wajib kedip mata sebelum tercatat</label>
         <label class="chk"><input type="checkbox" id="set-voice"> Sapaan suara saat tercatat</label>
+        <div style="margin-top:1rem;max-width:380px"><label>PIN menu Admin</label><div class="row" style="flex-wrap:nowrap"><input type="password" id="set-pin" placeholder="PIN baru (min. 4)" maxlength="12"><button class="btn g" onclick="setPin()">Simpan</button></div></div>
+        <div style="margin-top:1rem"><label>Rekap bulanan (Excel, 1 tab per hari, urut kelas-NIS-nama-jam)</label><div class="row"><input type="month" id="rekap-month" style="max-width:200px"><button class="btn g" onclick="exportMonth()"><i class="fa-solid fa-file-excel"></i> Unduh Excel</button></div></div>
+        <div class="row" style="margin-top:1rem;justify-content:space-between"><span class="sub" id="acct-info"></span><button class="btn d" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket"></i> Keluar</button></div>
         <button class="btn d" style="margin-top:.8rem" onclick="resetToday()"><i class="fa-solid fa-rotate-left"></i> Reset presensi hari ini</button>
       </div>
 
@@ -249,7 +279,7 @@ body.light .empty{color:#64748b}
       <div class="row" style="justify-content:space-between;margin-bottom:.6rem;padding-bottom:.5rem;border-bottom:1px solid var(--line)">
         <div class="title"><i class="fa-solid fa-clipboard-user" style="color:#818cf8"></i> Kehadiran Hari Ini</div>
         <div class="row"><span class="tag" id="attendance-count">0</span>
-        <button class="btn o" style="padding:.25rem .5rem" onclick="exportCSV()" title="Unduh CSV terurut"><i class="fa-solid fa-download"></i></button><button class="btn o" style="padding:.25rem .5rem" onclick="openMonth()" title="Buka spreadsheet bulan ini"><i class="fa-solid fa-table"></i></button></div>
+        <button class="btn o" style="padding:.25rem .5rem" onclick="exportCSV()" title="Unduh CSV terurut"><i class="fa-solid fa-download"></i></button></div>
       </div>
       <div class="list" id="log-list"></div>
     </div>
@@ -258,7 +288,7 @@ body.light .empty{color:#64748b}
 
 <script>
 const CFG = {
-  SCRIPT_URL: "https://script.google.com/macros/s/AKfycby2vwUPAtTAkgivJQNy2Ew4jnVR7pu1SL_Te2A--AKfqjwqVT19dppyOxcSELJTySgK/exec",
+  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbwo7Q72GVtRPWSTA2hED7_UBNnEbZVpU8dm4666l1tPf6-ANXtAGP8gPnva-QxkgGoF6Q/exec",
   MODEL_URL: "https://cdn.jsdelivr.net/npm/@vladmandic/face-api/model/",
   ADMIN_PIN: "100",
   THRESHOLD: 0.47,   // makin kecil makin ketat (0.4 ketat, 0.55 longgar)
@@ -280,8 +310,8 @@ const initials = n => String(n).split(' ').filter(Boolean).map(x => x[0]).join('
 
 let fa, detOpts, video = $('webcam'), videoEnroll = $('webcam-enroll'), canvas = $('overlay'), ctx = canvas.getContext('2d');
 let students = [], db = [], tracks = [], trackId = 1, tab = 'attendance', frame = 0, ready = false, enrolling = false;
-let day = todayKey(), logs = pj('fc_log_' + day, []), recorded = new Set(logs.map(l => String(l.id)));
-let queue = pj('fc_queue', []), flushing = false, fpsCount = 0;
+let day = todayKey(), logs = [], recorded = new Set();
+let fpsCount = 0, pendingLog = 0, pendingStu = 0;
 const DN = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 const defDays = () => DN.map((_, i) => ({ on: i > 0 && i < 6, t: '07:15' }));
 // size = inputSize detektor (kelipatan 32), min = lebar wajah minimal (rasio lebar video), w/h = resolusi kamera
@@ -293,12 +323,119 @@ if (!Array.isArray(S.days) || S.days.length !== 7) S.days = defDays();
 let gps = null;
 const dayCfg = () => S.days[new Date().getDay()];
 
-/* ---------- IndexedDB (cache siswa, muat banyak data) ---------- */
-const idb = {
-  open() { return new Promise((res, rej) => { const r = indexedDB.open('facecheck', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); }); },
-  async get(k) { try { const d = await this.open(); return await new Promise(res => { const q = d.transaction('kv').objectStore('kv').get(k); q.onsuccess = () => res(q.result); q.onerror = () => res(); }); } catch { return; } },
-  async set(k, v) { try { const d = await this.open(); await new Promise(res => { const t = d.transaction('kv', 'readwrite'); t.objectStore('kv').put(v, k); t.oncomplete = res; t.onerror = res; }); } catch {} }
-};
+/* ---------- Firebase: login, multi-sekolah, data ---------- */
+const FBCFG = { apiKey: "AIzaSyAEc3PXSxEbZYRw1gyL2Ed2Vs5TfPaxQoA", authDomain: "facecheckai-d5013.firebaseapp.com", projectId: "facecheckai-d5013", storageBucket: "facecheckai-d5013.firebasestorage.app", messagingSenderId: "476231069306", appId: "1:476231069306:web:770aca28f3656a16cf95c3" };
+const MASTER_UID = 'f052KArayTV2290T3ljKLpON68v1';
+const FBU = m => `https://www.gstatic.com/firebasejs/10.12.5/firebase-${m}.js`;
+let F = {}, fdb = null, auth = null, user = null, sid = null, school = null, unsub = [], unsubDay = null, appStarted = false, mode = 'login';
+const col = (...p) => F.collection(fdb, 'schools', sid, ...p);
+const dref = (...p) => F.doc(fdb, 'schools', sid, ...p);
+const skey = id => String(id).replace(/\//g, '_');
+const loadScript = u => new Promise((res, rej) => { const e = document.createElement('script'); e.src = u; e.onload = res; e.onerror = rej; document.head.appendChild(e); });
+// data wajah dipadatkan: 128 angka -> Int16 -> base64 (344 karakter, ~8x lebih kecil dari JSON)
+const pack = a => { const i = new Int16Array(128); for (let k = 0; k < 128; k++) i[k] = Math.max(-32767, Math.min(32767, Math.round(a[k] * 20000))); let b = ''; for (const x of new Uint8Array(i.buffer)) b += String.fromCharCode(x); return btoa(b); };
+const unpack = b => { const t = atob(b), u = new Uint8Array(256); for (let k = 0; k < 256; k++) u[k] = t.charCodeAt(k); const i = new Int16Array(u.buffer), f = new Float32Array(128); for (let k = 0; k < 128; k++) f[k] = i[k] / 20000; return f; };
+const sha = async t => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode((sid || '') + ':' + t)))].map(b => b.toString(16).padStart(2, '0')).join('');
+
+function show(v) {
+  ['auth', 'verify', 'school', 'pending', 'master'].forEach(x => $('v-' + x).classList.toggle('hidden', x !== v));
+  document.body.classList.toggle('noapp', v !== 'app'); $('loading-modal').classList.add('hidden');
+}
+async function bootFirebase() {
+  try {
+    const [a, au, fs] = await Promise.all([import(FBU('app')), import(FBU('auth')), import(FBU('firestore'))]);
+    F = { ...a, ...au, ...fs };
+    const app = F.initializeApp(FBCFG); auth = F.getAuth(app);
+    try { fdb = F.initializeFirestore(app, { localCache: F.persistentLocalCache({ tabManager: F.persistentMultipleTabManager() }) }); } catch { fdb = F.getFirestore(app); }
+    F.onAuthStateChanged(auth, onAuth);
+  } catch (e) { $('loading-title').textContent = 'Gagal memuat'; $('loading-status').textContent = 'Periksa koneksi internet lalu muat ulang. (' + e.message + ')'; }
+}
+const authErr = e => ({ 'auth/invalid-credential': 'Email atau kata sandi salah', 'auth/email-already-in-use': 'Email sudah terdaftar', 'auth/weak-password': 'Kata sandi minimal 6 karakter', 'auth/invalid-email': 'Format email salah', 'auth/too-many-requests': 'Terlalu banyak percobaan, coba lagi nanti', 'auth/network-request-failed': 'Tidak ada koneksi internet' }[e.code] || e.message);
+function authMode(m) {
+  mode = m; $('t-login').className = 'btn' + (m === 'login' ? ' active' : ''); $('t-reg').className = 'btn' + (m === 'reg' ? ' active' : '');
+  $('a-pass2-box').classList.toggle('hidden', m === 'login'); $('a-btn').textContent = m === 'login' ? 'Masuk' : 'Daftar & kirim verifikasi email';
+}
+async function doAuth(e) {
+  e.preventDefault(); const em = $('a-email').value.trim(), pw = $('a-pass').value; $('a-btn').disabled = true;
+  try {
+    if (mode === 'reg') {
+      if (pw !== $('a-pass2').value) throw { message: 'Kata sandi tidak sama' };
+      const c = await F.createUserWithEmailAndPassword(auth, em, pw); await F.sendEmailVerification(c.user);
+    } else await F.signInWithEmailAndPassword(auth, em, pw);
+  } catch (err) { toast(authErr(err), 'bad', 4500); } finally { $('a-btn').disabled = false; }
+}
+async function resetPass() {
+  const em = $('a-email').value.trim(); if (!em) return toast('Isi email dulu', 'warn');
+  try { await F.sendPasswordResetEmail(auth, em); toast('Tautan reset dikirim ke email'); } catch (err) { toast(authErr(err), 'bad'); }
+}
+async function resendVerify() { try { await F.sendEmailVerification(auth.currentUser); toast('Email verifikasi dikirim ulang'); } catch (err) { toast(authErr(err), 'bad'); } }
+async function checkVerified() {
+  try { await auth.currentUser.reload(); await auth.currentUser.getIdToken(true); if (auth.currentUser.emailVerified) onAuth(auth.currentUser); else toast('Email belum terverifikasi', 'warn'); } catch (err) { toast(authErr(err), 'bad'); }
+}
+async function doLogout() { try { await F.signOut(auth); } catch {} location.reload(); }
+async function saveSchool(e) {
+  e.preventDefault();
+  try { await F.setDoc(F.doc(fdb, 'schools', user.uid), { name: $('s-name').value.trim(), npsn: $('s-npsn').value.trim(), city: $('s-city').value.trim(), email: user.email, status: 'pending', createdAt: F.serverTimestamp() }); toast('Pengajuan terkirim'); }
+  catch (err) { toast('Gagal mengirim: ' + (err.code || err.message), 'bad', 5000); }
+}
+async function onAuth(u) {
+  user = u; unsub.forEach(f => f()); unsub = [];
+  if (!u) return show('auth');
+  if (u.uid === MASTER_UID) return startMaster();
+  if (!u.emailVerified) { $('verify-msg').textContent = 'Kami mengirim tautan verifikasi ke ' + u.email + '. Klik tautan itu, lalu tekan "Saya sudah verifikasi".'; return show('verify'); }
+  sid = u.uid;
+  unsub.push(F.onSnapshot(F.doc(fdb, 'schools', sid), s => {
+    if (!s.exists()) { if (s.metadata.fromCache) return; return show('school'); }
+    school = s.data();
+    if (school.status === 'approved') return startApp();
+    if (appStarted) return location.reload();
+    const m = { pending: ['fa-hourglass-half', 'Menunggu persetujuan', 'Pengajuan sekolah Anda sedang ditinjau master admin. Halaman ini otomatis berubah setelah disetujui.'], rejected: ['fa-circle-xmark', 'Pengajuan ditolak', 'Hubungi master admin untuk informasi lebih lanjut.'], suspended: ['fa-ban', 'Akun ditangguhkan', 'Hubungi master admin.'] }[school.status] || ['fa-circle-question', 'Status tidak dikenal', String(school.status)];
+    $('pend-icon').className = 'fa-solid ' + m[0]; $('pend-title').textContent = m[1]; $('pend-msg').textContent = m[2]; show('pending');
+  }, err => { if (!appStarted) toast('Tidak dapat memuat data sekolah: ' + err.code, 'bad', 5000); }));
+}
+function startMaster() {
+  show('master');
+  unsub.push(F.onSnapshot(F.collection(fdb, 'schools'), s => {
+    const o = { pending: 0, approved: 1, suspended: 2, rejected: 3 };
+    const arr = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (o[a.status] - o[b.status]) || String(a.name).localeCompare(String(b.name)));
+    const btn = (id, act, txt, c) => `<button class="btn ${c}" data-id="${esc(id)}" data-act="${act}">${txt}</button>`;
+    $('school-list').innerHTML = arr.length ? arr.map(x => `<div class="item"><div style="min-width:0;flex:1"><div class="nm">${esc(x.name)} <span class="tag ${x.status === 'approved' ? 'ok' : x.status === 'pending' ? 'late' : ''}">${esc(x.status)}</span></div>
+      <div class="sub">NPSN ${esc(x.npsn)} • ${esc(x.city)} • ${esc(x.email)}</div></div>
+      <div class="row" style="flex-wrap:nowrap;gap:.3rem">${x.status === 'approved' ? btn(x.id, 'suspended', 'Tangguhkan', 'd') : btn(x.id, 'approved', 'Setujui', 'g') + (x.status === 'pending' ? btn(x.id, 'rejected', 'Tolak', 'd') : '')}</div></div>`).join('') : '<div class="empty">Belum ada sekolah mendaftar.</div>';
+  }, err => toast('Gagal memuat: ' + err.code, 'bad', 5000)));
+}
+$('school-list').addEventListener('click', e => {
+  const b = e.target.closest('button[data-act]'); if (!b) return;
+  if (b.dataset.act === 'rejected' && !confirm('Tolak pengajuan sekolah ini?')) return;
+  F.updateDoc(F.doc(fdb, 'schools', b.dataset.id), { status: b.dataset.act, reviewedAt: F.serverTimestamp() }).then(() => toast('Status diperbarui')).catch(err => toast(err.code, 'bad'));
+});
+function startApp() {
+  show('app'); $('brand-sub').textContent = 'Presensi Digital ' + school.name; document.title = school.name + ' - FaceCheck AI';
+  $('acct-info').textContent = user.email; $('rekap-month').value = day.slice(0, 7);
+  if (appStarted) return; appStarted = true; S.pin = null; listenData(); init();
+}
+function watchToday() {
+  if (unsubDay) unsubDay();
+  unsubDay = F.onSnapshot(F.query(col('attendance'), F.where('date', '==', day)), { includeMetadataChanges: true }, s => {
+    logs = s.docs.map(d => ({ ...d.data(), id: String(d.data().id) })).sort((a, b) => (a.time < b.time ? 1 : -1));
+    recorded = new Set(logs.map(l => l.id)); pendingLog = s.docs.filter(d => d.metadata.hasPendingWrites).length; renderLog(); chips();
+  }, err => toast('Gagal memuat presensi: ' + err.code, 'bad', 5000));
+}
+function listenData() {
+  unsub.push(F.onSnapshot(col('students'), { includeMetadataChanges: true }, s => {
+    pendingStu = s.docs.filter(d => d.metadata.hasPendingWrites).length;
+    buildDb(s.docs.map(d => { const x = d.data(); return { id: x.id ?? d.id, name: x.name, className: x.className, vecs: (x.d || []).map(unpack) }; }));
+    if (tab === 'enrollment') renderStudents();
+  }, err => toast('Gagal memuat siswa: ' + err.code, 'bad', 5000)));
+  unsub.push(F.onSnapshot(dref('settings', 'main'), s => {
+    const d = s.data(); if (!d || s.metadata.hasPendingWrites) return;
+    if (Array.isArray(d.days) && d.days.length === 7) S.days = d.days;
+    if (d.liveness != null) S.liveness = d.liveness; if (d.voice != null) S.voice = d.voice; if (d.pin) S.pin = d.pin;
+    localStorage.setItem('fc_settings', JSON.stringify(S));
+    if (tab === 'enrollment') { renderDays(); $('set-live').checked = S.liveness; $('set-voice').checked = S.voice; }
+  }));
+  watchToday();
+}
 
 /* ---------- UI helpers ---------- */
 function toast(msg, type = 'ok', ms = 3000) {
@@ -309,7 +446,7 @@ function chips() {
   const n = $('chip-net'); n.textContent = navigator.onLine ? 'Online • auto-sync' : 'Offline • mode lokal'; n.className = 'chip ' + (navigator.onLine ? 'ok' : 'warn');
   $('chip-db').textContent = db.length + ' wajah';
   const g = $('chip-gps'); g.textContent = gps ? 'GPS ±' + Math.round(gps.acc) + 'm' : 'GPS off'; g.className = 'chip ' + (gps ? 'ok' : 'bad');
-  const q = $('chip-q'); q.className = 'chip warn' + (queue.length ? '' : ' hidden'); q.textContent = queue.length + ' antrean';
+  const pq = pendingLog + pendingStu, q = $('chip-q'); q.className = 'chip warn' + (pq ? '' : ' hidden'); q.textContent = pq + ' antrean';
 }
 function speak(t) {
   if (!S.voice || !('speechSynthesis' in window)) return;
@@ -335,7 +472,7 @@ setInterval(() => {
   const now = new Date();
   $('clock').textContent = now.toTimeString().slice(0, 8);
   $('date').textContent = now.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-  if (todayKey() !== day) { day = todayKey(); logs = []; recorded = new Set(); renderLog(); }
+  if (todayKey() !== day) { day = todayKey(); logs = []; recorded = new Set(); renderLog(); if (sid && fdb) watchToday(); }
 }, 1000);
 setInterval(() => { $('chip-fps').textContent = fpsCount + ' FPS'; fpsCount = 0; }, 1000);
 
@@ -351,13 +488,23 @@ function switchTab(t) {
   $('btn-tab-enrollment').className = 'btn' + (att ? '' : ' active');
   if (!att) { renderStudents(); renderDays(); $('set-live').checked = S.liveness; $('set-voice').checked = S.voice; $('set-range').value = S.range; }
 }
-function requestEnroll() { $('pin-modal').classList.remove('hidden'); $('pin-input').value = ''; $('pin-input').focus(); }
-function verifyPin(e) {
+function requestEnroll() { if (!S.pin) return switchTab('enrollment'); $('pin-modal').classList.remove('hidden'); $('pin-input').value = ''; $('pin-input').focus(); }
+async function verifyPin(e) {
   e.preventDefault();
-  if ($('pin-input').value.trim() === CFG.ADMIN_PIN) { $('pin-modal').classList.add('hidden'); switchTab('enrollment'); }
+  if (await sha($('pin-input').value.trim()) === S.pin) { $('pin-modal').classList.add('hidden'); switchTab('enrollment'); }
   else { toast('PIN salah', 'bad'); $('pin-input').value = ''; }
 }
-const saveS = () => localStorage.setItem('fc_settings', JSON.stringify(S));
+async function forgotPin() {
+  const pw = prompt('Masukkan kata sandi akun sekolah (butuh internet):'); if (!pw) return;
+  try { await F.reauthenticateWithCredential(auth.currentUser, F.EmailAuthProvider.credential(user.email, pw)); $('pin-modal').classList.add('hidden'); switchTab('enrollment'); toast('Atur PIN baru di Pengaturan', 'warn'); }
+  catch { toast('Kata sandi salah atau tidak ada internet', 'bad'); }
+}
+async function setPin() {
+  const v = $('set-pin').value.trim(); if (v.length < 4) return toast('PIN minimal 4 karakter', 'warn');
+  S.pin = await sha(v); localStorage.setItem('fc_settings', JSON.stringify(S));
+  F.setDoc(dref('settings', 'main'), { pin: S.pin }, { merge: true }).catch(() => {}); $('set-pin').value = ''; toast('PIN admin disimpan');
+}
+const saveS = () => { localStorage.setItem('fc_settings', JSON.stringify(S)); if (sid && fdb) F.setDoc(dref('settings', 'main'), { days: S.days, liveness: S.liveness, voice: S.voice }, { merge: true }).catch(() => {}); };
 function renderDays() {
   $('days-box').innerHTML = S.days.map((d, i) => `<div class="drow"><label class="chk" style="margin:0"><input type="checkbox" data-i="${i}" data-k="on" ${d.on ? 'checked' : ''}> ${DN[i]}</label><input type="time" data-i="${i}" data-k="t" value="${d.t}"></div>`).join('');
 }
@@ -374,9 +521,7 @@ $('set-range').addEventListener('change', async () => { S.range = $('set-range')
 /* ---------- Database wajah ---------- */
 function buildDb(list) {
   students = list || [];
-  db = students.filter(s => s.descriptors && s.descriptors.length).map(s => ({
-    id: String(s.id), name: s.name, className: s.className, vecs: s.descriptors.map(d => Float32Array.from(d))
-  }));
+  db = students.filter(s => s.vecs.length).map(s => ({ id: String(s.id), name: s.name, className: s.className, vecs: s.vecs }));
   chips();
 }
 function dist(a, b) { let s = 0; for (let i = 0; i < 128; i++) { const d = a[i] - b[i]; s += d * d; } return Math.sqrt(s); }
@@ -389,39 +534,15 @@ function matchFace(desc) {
   if (!best || best.d > CFG.THRESHOLD || second - best.d < CFG.MARGIN) return null;
   return best;
 }
-async function syncCloud(manual) {
-  if (!navigator.onLine) { if (manual) toast('Sedang offline, memakai data tersimpan', 'warn'); return; }
+async function syncCloud(manual) { // Firestore mengirim otomatis; tombol ini memastikan semua data tertunda sudah terkirim
   const ic = $('sync-icon'); ic.classList.add('fa-spin');
-  try {
-    await flushQueue();
-    if (queue.length) { if (manual) toast('Masih ada antrean belum terkirim', 'warn'); return; }
-    const r = await fetch(CFG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'getStudents' }) });
-    const j = await r.json();
-    if (j.status === 'success') {
-      buildDb(j.students); idb.set('students', j.students);
-      if (tab === 'enrollment') renderStudents();
-      if (manual) toast('Sinkronisasi berhasil: ' + db.length + ' siswa');
-    }
-  } catch { if (manual) toast('Gagal sinkron, memakai data tersimpan', 'warn'); }
+  try { if (!navigator.onLine) throw 0; await Promise.race([F.waitForPendingWrites(fdb), sleep(5000).then(() => { throw 0; })]); if (manual) toast('Semua data sudah tersinkron'); }
+  catch { if (manual) toast('Ada data menunggu internet, akan terkirim otomatis', 'warn'); }
   finally { ic.classList.remove('fa-spin'); }
 }
 
-/* ---------- Antrean presensi (aman saat offline) ---------- */
-function saveQueue() { localStorage.setItem('fc_queue', JSON.stringify(queue)); chips(); }
-async function flushQueue() {
-  if (flushing || !queue.length || !navigator.onLine) return;
-  flushing = true;
-  try {
-    while (queue.length) {
-      const r = await fetch(CFG.SCRIPT_URL, { method: 'POST', body: JSON.stringify(queue[0]) });
-      if (!r.ok) break; queue.shift(); saveQueue();
-    }
-  } catch {}
-  flushing = false; chips();
-}
-setInterval(flushQueue, 15000);
-window.addEventListener('online', () => { chips(); flushQueue(); syncCloud(); });
-window.addEventListener('offline', chips);
+/* ---------- Status koneksi ---------- */
+window.addEventListener('online', chips); window.addEventListener('offline', chips);
 
 /* ---------- GPS ---------- */
 function startGPS() {
@@ -434,7 +555,7 @@ function registerSW() {
   if (!('serviceWorker' in navigator) || !location.protocol.startsWith('http')) return;
   navigator.serviceWorker.register('sw.js').then(() => navigator.serviceWorker.ready).then(async () => {
     await sleep(800); if (!navigator.serviceWorker.controller) return;
-    try { await Promise.all([fa.nets.tinyFaceDetector.loadFromUri(CFG.MODEL_URL), fa.nets.faceLandmark68Net.loadFromUri(CFG.MODEL_URL), fa.nets.faceRecognitionNet.loadFromUri(CFG.MODEL_URL)]); } catch {}
+    if (!localStorage.getItem('fc_warm2')) { localStorage.setItem('fc_warm2', '1'); location.reload(); } // sekali: muat ulang agar semua file tersimpan untuk mode offline
   }).catch(() => {});
 }
 
@@ -456,15 +577,16 @@ function record(s) {
   const g = gps && Date.now() - gps.ts < 300000 ? gps : null;
   const e = { id, name: s.name, className: s.className, time: now.toTimeString().slice(0, 8), status: late ? 'Terlambat' : 'Tepat Waktu',
     lat: g ? +g.lat.toFixed(6) : null, lng: g ? +g.lng.toFixed(6) : null, acc: g ? Math.round(g.acc) : null };
-  recorded.add(id); logs.unshift(e); localStorage.setItem('fc_log_' + day, JSON.stringify(logs)); renderLog();
+  recorded.add(id);
+  F.setDoc(dref('attendance', `${day}_${skey(id)}`), { date: day, ...e, ts: F.serverTimestamp() }).catch(() => {}); // sudah tercatat di perangkat lain = ditolak server, aman
   const hr = now.getHours(), sal = hr < 11 ? 'pagi' : hr < 15 ? 'siang' : hr < 18 ? 'sore' : 'malam';
   speak(`Selamat ${sal}, ${s.name}`); toast(`${s.name} tercatat (${e.status})`, late ? 'warn' : 'ok');
-  queue.push({ action: 'attendance', date: day, id, name: s.name, className: s.className, status: e.status, time: e.time, lat: e.lat, lng: e.lng, acc: e.acc }); saveQueue(); flushQueue();
 }
 function resetToday() {
-  if (!confirm('Reset semua presensi hari ini? Data di perangkat dan di cloud (tanggal hari ini) akan dihapus.')) return;
-  logs = []; recorded = new Set(); localStorage.setItem('fc_log_' + day, '[]'); renderLog(); tracks.forEach(resetTrack);
-  queue.push({ action: 'resetAttendance', date: day }); saveQueue(); flushQueue(); toast('Presensi hari ini direset', 'warn');
+  if (!confirm('Reset semua presensi hari ini? Data kehadiran hari ini dihapus dari cloud.')) return;
+  const ids = logs.map(l => l.id); tracks.forEach(resetTrack);
+  for (let i = 0; i < ids.length; i += 400) { const b = F.writeBatch(fdb); ids.slice(i, i + 400).forEach(x => b.delete(dref('attendance', `${day}_${skey(x)}`))); b.commit().catch(err => toast(err.code, 'bad')); }
+  toast('Presensi hari ini direset', 'warn');
 }
 function exportCSV() {
   if (!logs.length) return toast('Belum ada data', 'warn');
@@ -475,13 +597,25 @@ function exportCSV() {
   const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
   a.download = `presensi_${day}.csv`; a.click(); URL.revokeObjectURL(a.href);
 }
-async function openMonth() {
+async function exportMonth() {
+  const m = $('rekap-month').value; if (!m) return toast('Pilih bulan dulu', 'warn');
   if (!navigator.onLine) return toast('Butuh koneksi internet', 'warn');
   try {
-    const r = await fetch(CFG.SCRIPT_URL, { method: 'POST', body: JSON.stringify({ action: 'monthLink', month: day.slice(0, 7) }) });
-    const j = await r.json();
-    if (j.url) window.open(j.url, '_blank'); else toast(j.message || 'Belum ada data bulan ini', 'warn');
-  } catch { toast('Gagal menghubungi server', 'bad'); }
+    if (!window.XLSX) await loadScript('https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js');
+    toast('Mengambil data ' + m + '...');
+    const snap = await F.getDocs(F.query(col('attendance'), F.where('date', '>=', m + '-01'), F.where('date', '<=', m + '-31')));
+    if (snap.empty) return toast('Tidak ada data pada bulan itu', 'warn');
+    const by = {}; snap.docs.forEach(d => { const x = d.data(); (by[x.date] = by[x.date] || []).push(x); });
+    const cmp = (a, b) => String(a).localeCompare(String(b), 'id', { numeric: true });
+    const wb = XLSX.utils.book_new();
+    Object.keys(by).sort().forEach(dt => {
+      const rows = by[dt].sort((a, b) => cmp(a.className, b.className) || cmp(a.id, b.id) || cmp(a.name, b.name) || cmp(a.time, b.time)).map(l => [l.className, String(l.id), l.name, l.time, l.status, l.lat ?? '', l.lng ?? '']);
+      const ws = XLSX.utils.aoa_to_sheet([['Kelas', 'NIS', 'Nama', 'Jam', 'Status', 'Lat', 'Lng'], ...rows]);
+      ws['!cols'] = [{ wch: 12 }, { wch: 12 }, { wch: 28 }, { wch: 10 }, { wch: 12 }, { wch: 11 }, { wch: 11 }];
+      XLSX.utils.book_append_sheet(wb, ws, dt);
+    });
+    XLSX.writeFile(wb, `Presensi_${String(school.name).replace(/[^\w]+/g, '_')}_${m}.xlsx`);
+  } catch (err) { toast('Gagal membuat Excel: ' + (err.code || err.message), 'bad', 5000); }
 }
 
 /* ---------- Tracking + pengenalan ---------- */
@@ -632,13 +766,8 @@ async function handleEnroll(e) {
     if (dup && dup.s.id !== id && !confirm(`Wajah ini mirip dengan ${dup.s.name} (${dup.s.id}). Tetap daftarkan?`)) throw new Error('Pendaftaran dibatalkan.');
 
     btn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i> Menyimpan ke cloud...';
-    for (const d of descs) queue.push({ action: 'register', id, name, className, descriptor: d });
-    saveQueue();
-    const ex = students.find(s => String(s.id) === id);
-    if (ex) { ex.name = name; ex.className = className; ex.descriptors = (ex.descriptors || []).concat(descs); }
-    else students.push({ id, name, className, descriptors: descs });
-    buildDb(students); idb.set('students', students);
-    flushQueue(); toast(`${name} (${className}) berhasil didaftarkan${navigator.onLine ? '' : ' (offline, dikirim otomatis nanti)'}`); speak('Pendaftaran berhasil');
+    F.setDoc(dref('students', skey(id)), { id, name, className, d: F.arrayUnion(...descs.map(pack)), updatedAt: F.serverTimestamp() }, { merge: true }).catch(err => toast('Gagal menyimpan: ' + err.code, 'bad', 5000));
+    toast(`${name} (${className}) berhasil didaftarkan${navigator.onLine ? '' : ' (offline, dikirim otomatis nanti)'}`); speak('Pendaftaran berhasil');
     $('enroll-form').reset(); renderStudents();
   } catch (err) { toast(err.message, 'bad', 5000); }
   finally { btn.disabled = false; btn.innerHTML = label; hint.textContent = 'Kamera Pendaftar'; enrolling = false; }
@@ -650,7 +779,7 @@ function renderStudents() {
   const list = students.filter(s => !q || [s.name, s.id, s.className].join(' ').toLowerCase().includes(q));
   $('enrolled-count').textContent = students.length + ' siswa';
   $('enrolled-list').innerHTML = list.length ? list.slice(0, 100).map(s => {
-    const id = esc(s.id), n = (s.descriptors || []).length;
+    const id = esc(s.id), n = s.vecs.length;
     return `<div class="item"><div class="row" style="flex-wrap:nowrap;min-width:0"><div class="av">${esc(initials(s.name))}</div>
     <div style="min-width:0"><div class="nm">${esc(s.name)}</div><div class="sub">ID: ${id} • <span class="tag">${esc(s.className)}</span> • <span class="tag ${n ? 'ok' : 'late'}">${n ? n + ' sampel' : 'wajah kosong'}</span></div></div></div>
     <div class="row" style="flex-wrap:nowrap;gap:.3rem"><button class="btn o" data-act="edit" data-id="${id}" title="Edit"><i class="fa-solid fa-pen-to-square"></i></button>
@@ -659,7 +788,7 @@ function renderStudents() {
   }).join('') + (list.length > 100 ? `<div class="empty">Menampilkan 100 dari ${list.length}. Gunakan pencarian.</div>` : '')
     : '<div class="empty">Tidak ada data siswa.</div>';
 }
-function afterChange() { buildDb(students); idb.set('students', students); saveQueue(); renderStudents(); flushQueue(); tracks.forEach(resetTrack); }
+const fail = err => toast('Gagal: ' + (err.code || err.message), 'bad', 5000);
 $('enrolled-list').addEventListener('click', e => {
   const b = e.target.closest('button[data-id]'); if (!b) return;
   const id = b.dataset.id, s = students.find(x => String(x.id) === id); if (!s) return;
@@ -668,18 +797,19 @@ $('enrolled-list').addEventListener('click', e => {
     $('edit-modal').classList.remove('hidden');
   } else if (b.dataset.act === 'del') {
     if (!confirm(`Hapus ${s.name} (${s.id}) beserta data wajahnya?`)) return;
-    students = students.filter(x => x !== s); queue.push({ action: 'delete', id }); afterChange(); toast('Siswa dihapus', 'warn');
+    F.deleteDoc(dref('students', skey(id))).catch(fail); tracks.forEach(resetTrack); toast('Siswa dihapus', 'warn');
   } else if (b.dataset.act === 'face') {
     if (!confirm(`Reset data wajah ${s.name}? Siswa harus direkam ulang.`)) return;
-    s.descriptors = []; queue.push({ action: 'resetFace', id }); afterChange(); toast('Data wajah direset, silakan rekam ulang', 'warn');
+    F.updateDoc(dref('students', skey(id)), { d: [], updatedAt: F.serverTimestamp() }).catch(fail); tracks.forEach(resetTrack); toast('Data wajah direset, silakan rekam ulang', 'warn');
   }
 });
 function saveEdit(e) {
   e.preventDefault();
   const oid = $('edit-original-id').value, id = $('edit-id').value.trim(), name = $('edit-name').value.trim(), className = $('edit-class').value.trim();
   const s = students.find(x => String(x.id) === oid); if (!s) return;
-  Object.assign(s, { id, name, className }); queue.push({ action: 'update', originalId: oid, id, name, className });
-  $('edit-modal').classList.add('hidden'); afterChange(); toast('Data siswa diperbarui');
+  if (id === oid) F.updateDoc(dref('students', skey(oid)), { name, className }).catch(fail);
+  else { const b = F.writeBatch(fdb); b.set(dref('students', skey(id)), { id, name, className, d: s.vecs.map(pack), updatedAt: F.serverTimestamp() }); b.delete(dref('students', skey(oid))); b.commit().catch(fail); }
+  $('edit-modal').classList.add('hidden'); tracks.forEach(resetTrack); toast('Data siswa diperbarui');
 }
 
 /* ---------- Inisialisasi ---------- */
@@ -694,24 +824,22 @@ async function startCamera() {
   } catch { setStatus('Akses kamera ditolak', 'bad'); toast('Izinkan akses kamera di browser', 'bad', 5000); }
 }
 async function init() {
+  $('loading-modal').classList.remove('hidden'); $('loading-title').textContent = 'Memuat Mesin AI...';
   chips(); renderLog();
   try {
     fa = window.faceapi; if (!fa) throw new Error('Library FaceAPI gagal dimuat');
     try { await fa.tf.ready(); } catch {}
     $('loading-status').textContent = 'Memuat model neural network...';
     await Promise.all([fa.nets.tinyFaceDetector.loadFromUri(CFG.MODEL_URL), fa.nets.faceLandmark68Net.loadFromUri(CFG.MODEL_URL), fa.nets.faceRecognitionNet.loadFromUri(CFG.MODEL_URL)]);
-    applyRange();
-    ready = true;
-    const cached = await idb.get('students'); if (cached) buildDb(cached);
+    applyRange(); ready = true;
     $('loading-modal').classList.add('hidden');
     startCamera(); loop(); renderLoop(); startGPS(); registerSW();
-    syncCloud(); flushQueue(); setInterval(syncCloud, 300000);
   } catch (err) {
     $('loading-title').textContent = 'Gagal Memuat Sistem';
     $('loading-status').innerHTML = `<span style="color:#f43f5e">${esc(err.message)}. Periksa koneksi internet.</span>`;
   }
 }
-window.addEventListener('DOMContentLoaded', init);
+window.addEventListener('DOMContentLoaded', bootFirebase);
 </script>
 </body>
 </html>
